@@ -43,7 +43,7 @@ int main()
 
     while(1)
     {
-        int new_client = accept(server_sock, (struct sockaddr*)&serv_addr, (socklen_t*)&addrlen));
+        int new_client = accept(server_sock, (struct sockaddr*)&serv_addr, (socklen_t*)&addrlen);
         if (new_client < 0)
         {
             perror("Accepting new client error");
