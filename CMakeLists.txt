@@ -10,16 +10,16 @@ add_executable(server
 )
 
 # Client executable
-#add_executable(client
-#    src/client.c
-#)
+add_executable(client
+    src/client.c
+)
 
 # Include directories
 target_include_directories(server PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-#target_include_directories(client PRIVATE
-#    ${CMAKE_CURRENT_SOURCE_DIR}/include
-#)
+target_include_directories(client PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
 

@@ -50,6 +50,9 @@ int main()
             exit(EXIT_FAILURE);
         }
 
+        printf("\nnew client connected\n");
+
+
     }
 
 
