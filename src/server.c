@@ -6,11 +6,30 @@
 #include <pthread.h>
 
 #define PORT 8081
+#define MAX_USERS 10
+
+void *handle_client(void *socket_fd) {
+    int new_socket = *(int *)socket_fd;
+    char buffer[1024] = {0};
+    const char *hello = "Hello from server";
+
+    read(new_socket, buffer, 1024);
+    printf("Client %d: %s\n", new_socket, buffer);
+
+    send(new_socket, hello, strlen(hello), 0);
+    printf("Hello message sent to client %d\n", new_socket);
+
+    close(new_socket);
+    pthread_exit(NULL);
+}
 
 int main()
 {
     
-    int clients[5] = {0};
+    int clients[MAX_USERS] = {0};
+    pthread_t threads[MAX_USERS];
+    int thread_count = 0;
+
 
     int server_sock = 0;
     struct sockaddr_in serv_addr;
@@ -50,7 +69,22 @@ int main()
             exit(EXIT_FAILURE);
         }
 
-        printf("\nnew client connected\n");
+        printf("\nnew client connected with client id: %d\n", new_client);
+        
+        int thread_create = pthread_create(&threads[thread_count], NULL, handle_client, (void*)new_client);
+        if (thread_create < 0)
+        {
+            perror("thread create for client error");
+            exit(EXIT_FAILURE);
+        }
+
+
+        thread_count++;
+        if (thread_count >= MAX_USERS)
+        {
+            printf("too many clients.Abort new connections\n");
+            close(new_client);
+        }
 
 
     }
