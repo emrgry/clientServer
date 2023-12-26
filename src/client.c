@@ -16,10 +16,10 @@ typedef struct
     int from; // for the client, this is the user_id
 } Message;
 
-void validateUserId(char *userIdStr)
+int validateUserId(char *userIdStr)
 {
     char *endChar;
-    long userId = strtol(userIdStr, &endChar, 10);
+    int userId = (int)strtol(userIdStr, &endChar, 10);
 
     if (*endChar != '\0' || endChar == userIdStr)
     {
@@ -31,14 +31,15 @@ void validateUserId(char *userIdStr)
         printf("Error: Argument is not in range [0, 999]\n");
         exit(EXIT_FAILURE);
     }
+    return userId;
 }
 
 int main(int argc, char *argv[])
 {
-    validateUserId(argv[1]);
+    int user_id = validateUserId(argv[1]);
 
-    char user_id[MAX_USER_ID_LENGTH];
-    strcpy(user_id, argv[1]);
+    // char user_id[MAX_USER_ID_LENGTH];
+    // strcpy(user_id, argv[1]);
 
     int sock = 0;
     struct sockaddr_in server_addr;
