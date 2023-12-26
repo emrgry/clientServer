@@ -92,7 +92,6 @@ void handleLoginRequest(int newSocket, Message receivedMessage, int *userMap)
         // Reject login request and send registration request to the client
         Message registrationRequest;
         registrationRequest.type = 2; // 2 indicates a registration request
-        registrationRequest.from = -1;
         send(newSocket, &registrationRequest, sizeof(registrationRequest), 0);
     }
 }

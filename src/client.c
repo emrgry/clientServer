@@ -147,9 +147,9 @@ int main(int argc, char *argv[])
         strcpy(userMessage.body, buffer);
         userMessage.to = -1; // Sending to server
 
-        // Send message to server
-        send(sock, &userMessage, sizeof(userMessage), 0);
-        printf("Message sent to server\n");
+        // // Send message to server
+        // send(sock, &userMessage, sizeof(userMessage), 0);
+        // printf("Message sent to server\n");
 
         // Receive message from server
         Message receivedMessage;
@@ -163,6 +163,10 @@ int main(int argc, char *argv[])
         else if (receivedMessage.type == 2) // registration request
         {
             registerUser(sock);
+        }
+        else
+        {
+            printf("Server %d: %s\n", sock, receivedMessage.body);
         }
 
         printf("Server: %s\n", buffer);
