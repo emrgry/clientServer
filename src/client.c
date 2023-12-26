@@ -10,7 +10,9 @@
 
 int main(int argc, char *argv[])
 {
-    char user_name[MAX_USER_NAME] = argv[1];
+    char user_name[MAX_USER_NAME];
+    strcpy(user_name, argv[1]);
+
     printf("User name: %s\n", user_name);
     printf("First argument: %s\n", argv[1]);
     int sock = 0;
