@@ -154,9 +154,6 @@ void handleRegistrationRequest(int newSocket, Message receivedMessage)
     confirmationMessage.type = 3; // Assuming 3 is the type for a registration confirmation
     strcpy(confirmationMessage.body, "registered");
     send(newSocket, &confirmationMessage, sizeof(confirmationMessage), 0);
-    char message[1000];
-    strcpy(message, "registered");
-    send(newSocket, message, strlen(message), 0);
 }
 
 void *handleClient(void *args)

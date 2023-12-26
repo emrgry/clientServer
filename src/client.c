@@ -157,11 +157,11 @@ int main(int argc, char *argv[])
         fgets(buffer, BUFFER_SIZE, stdin);
 
         // Create a Message for the user's message
-        Message userMessage;
-        userMessage.type = 1;
-        userMessage.from = userId;
-        strcpy(userMessage.body, buffer);
-        userMessage.to = -1; // Sending to server
+        // Message userMessage;
+        // userMessage.type = 1;
+        // userMessage.from = userId;
+        // strcpy(userMessage.body, buffer);
+        // userMessage.to = -1; // Sending to server
 
         // // Send message to server
         // send(sock, &userMessage, sizeof(userMessage), 0);
