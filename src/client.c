@@ -64,15 +64,19 @@ void registerUser(int sock, int userId)
 
     printf("Enter your username: ");
     fgets(username, REGISTRATION_BUFFER_SIZE, stdin);
+    removeNewline(username);
 
     printf("Enter your phone number: ");
     fgets(phoneNumber, REGISTRATION_BUFFER_SIZE, stdin);
+    removeNewline(phoneNumber);
 
     printf("Enter your name: ");
     fgets(name, REGISTRATION_BUFFER_SIZE, stdin);
+    removeNewline(name);
 
     printf("Enter your surname: ");
     fgets(surname, REGISTRATION_BUFFER_SIZE, stdin);
+    removeNewline(surname);
 
     // Create a Message for the user's information
     Message userInfo;
@@ -89,6 +93,15 @@ void registerUser(int sock, int userId)
     free(phoneNumber);
     free(name);
     free(surname);
+}
+
+void removeNewline(char *string)
+{
+    int length = strlen(string);
+    if (string[length - 1] == '\n')
+    {
+        string[length - 1] = '\0';
+    }
 }
 
 int main(int argc, char *argv[])
@@ -174,7 +187,7 @@ int main(int argc, char *argv[])
         }
         else
         {
-            printf("Server %d: %s\n", sock, receivedMessage.body);
+            printf("Server %d: %s, message type %d\n", sock, receivedMessage.body, receivedMessage.type);
         }
 
         printf("Server: %s\n", buffer);
