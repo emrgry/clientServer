@@ -85,6 +85,10 @@ void handleLoginRequest(int newSocket, Message receivedMessage)
         printf("User is registered\n");
         // Continue with login process
         // userMap[newSocket] = receivedMessage.from;
+        Message confirmationMessage;
+        confirmationMessage.type = 3; // Assuming 3 is the type for a registration confirmation
+        strcpy(confirmationMessage.body, "loggedin");
+        send(newSocket, &confirmationMessage, sizeof(confirmationMessage), 0);
     }
     else
     {
@@ -147,10 +151,9 @@ void handleRegistrationRequest(int newSocket, Message receivedMessage)
 
     // Send a confirmation message back to the client
     Message confirmationMessage;
-    confirmationMessage.type = 3; // Assuming 3 is the type for a registration confirmation
-    printf("Sending confirmation message to client %d\n", newSocket);
+    confirmationMessage.type = 4; // Assuming 3 is the type for a registration confirmation
+    strcpy(confirmationMessage.body, "registered");
     send(newSocket, &confirmationMessage, sizeof(confirmationMessage), 0);
-    printf("Confirmation message sent to client %d\n", newSocket);
 }
 
 void *handleClient(void *args)
