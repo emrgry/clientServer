@@ -8,16 +8,50 @@
 #define PORT 8081
 #define MAX_USERS 10
 
+typedef struct
+{
+    int type; // 0 for login request, 1 for regular message
+    char body[1024];
+    int to;   // -1 for server, user_id for specific user
+    int from; // -1 for server, user_id for specific user
+} Message;
+
 void *handle_client(void *socket_fd)
 {
     int new_socket = *(int *)socket_fd;
-    char buffer[1024] = {0};
+    Message received_message;
 
-    read(new_socket, buffer, 1024);
-    strcat(buffer, " is online");
+    while (1)
+    {
+        int valrec = recv(new_socket, &received_message, sizeof(received_message), 0);
+        if (received_message.type == 0) // login request
+        {
+            printf("Login request received from client: %d userId: %s\n", new_socket, received_message.from);
+            // Save user_id to a file
+            FILE *file = fopen("TerChatApp/users/user_list.txt", "a");
+            if (file != NULL)
+            {
+                fprintf(file, "%s\n", received_message.from);
+                fclose(file);
+            }
+        }
+        else if (received_message.type == 1)
+        {
+            printf("Message from client %d: %s\n", new_socket, received_message.body);
+        }
+        else
+        {
+            printf("Client %d: %s\n", new_socket, received_message.body);
+        }
+    }
 
-    send(new_socket, buffer, strlen(buffer), 0);
-    printf("Message sent to client %d: %s\n", new_socket, buffer);
+    // char buffer[1024] = {0};
+
+    // read(new_socket, buffer, 1024);
+    // strcat(buffer, " is online");
+
+    // send(new_socket, buffer, strlen(buffer), 0);
+    // printf("Message sent to client %d: %s\n", new_socket, buffer);
 
     close(new_socket);
     pthread_exit(NULL);
@@ -64,7 +98,7 @@ int main()
         int new_client = accept(server_sock, (struct sockaddr *)&serv_addr, (socklen_t *)&addrlen);
         if (new_client < 0)
         {
-            perror("Accepting new client error");
+            perror("Error! When server accepting new client");
             exit(EXIT_FAILURE);
         }
 
