@@ -8,17 +8,37 @@
 #define PORT 8081
 #define MAX_USERS 10
 
-typedef struct
+typedef struct // Struct to pass arguments to the thread
 {
-    int type; // -1 for disconnect, 0 for login request, 1 for regular message
+    int new_socket;
+    int *user_map;
+} ThreadArgs;
+
+typedef struct // Struct to represent a message
+{
+    /*
+    message type / explanation
+        -1      /  disconnect
+        0       /  login request
+        1       /  regular message
+        2       /  registration request
+    */
+    int type;
     char body[1024];
     int to;   // -1 for server, user_id for specific user
     int from; // -1 for server, user_id for specific user
 } Message;
 
-int user_map[MAX_USERS]; // Array to map socket numbers to user IDs
+void handleSignal(int signal, int *user_map)
+{
+    if (signal == SIGINT)
+    {
+        notifyClientsAndShutdown(user_map);
+        exit(0);
+    }
+}
 
-void notifyClientsAndShutdown()
+void notifyClientsAndShutdown(int *user_map)
 {
     Message disconnectMessage;
     disconnectMessage.type = -1; // -1 indicates a disconnect message
@@ -37,7 +57,7 @@ void notifyClientsAndShutdown()
     close(0);
 }
 
-void disconnectClient(int new_socket, int user_map[])
+void disconnectClient(int new_socket, int *user_map)
 {
     int user_id = user_map[new_socket];
     printf("Client with user_id %d disconnected\n", user_id);
@@ -46,15 +66,60 @@ void disconnectClient(int new_socket, int user_map[])
     pthread_exit(NULL);
 }
 
-void *handle_client(void *socket_fd)
+int isUserRegistered(int userId)
 {
-    int new_socket = *(int *)socket_fd;
+    FILE *file = fopen("TerChatApp/users/user_list.txt", "r");
+    if (file != NULL)
+    {
+        int id;
+        while (fscanf(file, "%d", &id) != EOF)
+        {
+            if (id == userId)
+            {
+                fclose(file);
+                return 1; // User is registered
+            }
+        }
+        fclose(file);
+    }
+    else
+    {
+        printf("Error opening file\n");
+    }
+    return 0; // User is not registered
+}
+
+void handleLoginRequest(int new_socket, Message received_message, int *user_map)
+{
+    printf("Login request received from client: %d userId: %d\n", new_socket, received_message.from);
+    if (isUserRegistered(received_message.from))
+    {
+        printf("User is registered\n");
+        // Continue with login process
+        user_map[new_socket] = received_message.from;
+    }
+    else
+    {
+        printf("User is not registered\n");
+        // Reject login request and send registration request to the client
+        Message registration_request;
+        registration_request.type = 2; // 2 indicates a registration request
+        registration_request.from = -1;
+        send(new_socket, &registration_request, sizeof(registration_request), 0);
+    }
+}
+
+void *handle_client(void *args)
+{
+    ThreadArgs *threadArgs = (ThreadArgs *)args;
+    int new_socket = threadArgs->new_socket;
+    int *user_map = threadArgs->user_map;
     Message received_message;
 
     while (1)
     {
         int valrec = recv(new_socket, &received_message, sizeof(received_message), 0);
-        if (valrec <= 0)
+        if (valrec <= 0) // Client disconnected
         {
             disconnectClient(new_socket, user_map);
         }
@@ -64,21 +129,22 @@ void *handle_client(void *socket_fd)
         }
         else if (received_message.type == 0) // login request
         {
-            printf("Login request received from client: %d userId: %d\n", new_socket, received_message.from);
+            handleLoginRequest(new_socket, received_message, user_map);
             // Save user_id to a file
-            FILE *file = fopen("user_list.txt", "a");
-            if (file != NULL)
-            {
-                printf("Saving user_id to file\n");
-                fprintf(file, "%d\n", received_message.from);
-                fclose(file);
-            }
-            else
-            {
-                printf("Error opening file\n");
-            }
-            // Store the mapping from socket number to user_id
-            user_map[new_socket] = received_message.from;
+
+            // FILE *file = fopen("TerChatApp/users/user_list.txt", "a");
+            // if (file != NULL)
+            // {
+            //     printf("Saving user_id to file\n");
+            //     fprintf(file, "%d\n", received_message.from);
+            //     fclose(file);
+            // }
+            // else
+            // {
+            //     printf("Error opening file\n");
+            // }
+            // // Store the mapping from socket number to user_id
+            // user_map[new_socket] = received_message.from;
         }
         else if (received_message.type == 1)
         {
@@ -104,6 +170,9 @@ void *handle_client(void *socket_fd)
 
 int main()
 {
+    int user_map[MAX_USERS];         // Array to map socket numbers to user IDs
+    mkdir("TerChatApp", 0777);       // Create the TerChatApp directory if it does not exist
+    mkdir("TerChatApp/users", 0777); // Create the users directory if it does not exist
 
     int clients[MAX_USERS] = {0};
     pthread_t threads[MAX_USERS];
@@ -138,7 +207,7 @@ int main()
         exit(EXIT_FAILURE);
     }
 
-    atexit(notifyClientsAndShutdown);
+    signal(SIGINT, handleSignal);
 
     while (1)
     {
@@ -152,6 +221,10 @@ int main()
         printf("\nnew client connected with client id: %d\n", new_client);
 
         clients[thread_count] = new_client;
+        ThreadArgs *args = malloc(sizeof(ThreadArgs));
+        args->new_socket = new_client;
+        args->user_map = user_map;
+
         int thread_create = pthread_create(&threads[thread_count], NULL, handle_client, (void *)&clients[thread_count]);
         if (thread_create < 0)
         {
