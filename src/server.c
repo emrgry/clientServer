@@ -26,12 +26,12 @@ void *handle_client(void *socket_fd)
         int valrec = recv(new_socket, &received_message, sizeof(received_message), 0);
         if (received_message.type == 0) // login request
         {
-            printf("Login request received from client: %d userId: %s\n", new_socket, received_message.from);
+            printf("Login request received from client: %d userId: %d\n", new_socket, received_message.from);
             // Save user_id to a file
             FILE *file = fopen("TerChatApp/users/user_list.txt", "a");
             if (file != NULL)
             {
-                fprintf(file, "%s\n", received_message.from);
+                fprintf(file, "%d\n", received_message.from);
                 fclose(file);
             }
         }
