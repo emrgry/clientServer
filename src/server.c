@@ -148,7 +148,9 @@ void handleRegistrationRequest(int newSocket, Message receivedMessage)
     // Send a confirmation message back to the client
     Message confirmationMessage;
     confirmationMessage.type = 3; // Assuming 3 is the type for a registration confirmation
+    printf("Sending confirmation message to client %d\n", newSocket);
     send(newSocket, &confirmationMessage, sizeof(confirmationMessage), 0);
+    printf("Confirmation message sent to client %d\n", newSocket);
 }
 
 void *handleClient(void *args)
