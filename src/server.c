@@ -12,13 +12,12 @@ void *handle_client(void *socket_fd)
 {
     int new_socket = *(int *)socket_fd;
     char buffer[1024] = {0};
-    const char *hello = "Hello from server";
 
     read(new_socket, buffer, 1024);
-    printf("Client %d: %s\n", new_socket, buffer);
+    strcat(buffer, " is online");
 
-    send(new_socket, hello, strlen(hello), 0);
-    printf("Hello message sent to client %d\n", new_socket);
+    send(new_socket, buffer, strlen(buffer), 0);
+    printf("Message sent to client %d: %s\n", new_socket, buffer);
 
     close(new_socket);
     pthread_exit(NULL);
