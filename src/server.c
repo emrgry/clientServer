@@ -122,7 +122,7 @@ void handleRegistrationRequest(int newSocket, Message receivedMessage, int *user
         return;
     }
     // Write the user's information to the file
-    fprintf(file, "%s,%s,%s,%s,%s\n", receivedMessage.from, username, phoneNumber, name, surname);
+    fprintf(file, "%d,%s,%s,%s,%s\n", receivedMessage.from, username, phoneNumber, name, surname);
     fclose(file);
 
     // Create a directory for the user
