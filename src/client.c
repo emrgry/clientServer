@@ -53,6 +53,15 @@ void disconnect(int sock, int user_id)
     printf("Disconnect request sent to server\n");
 }
 
+void removeNewline(char *string)
+{
+    int length = strlen(string);
+    if (string[length - 1] == '\n')
+    {
+        string[length - 1] = '\0';
+    }
+}
+
 void registerUser(int sock, int userId)
 {
     printf("Please register for using this app\n");
@@ -93,15 +102,6 @@ void registerUser(int sock, int userId)
     free(phoneNumber);
     free(name);
     free(surname);
-}
-
-void removeNewline(char *string)
-{
-    int length = strlen(string);
-    if (string[length - 1] == '\n')
-    {
-        string[length - 1] = '\0';
-    }
 }
 
 int main(int argc, char *argv[])
