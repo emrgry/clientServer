@@ -24,6 +24,13 @@ void *handle_client(void *socket_fd)
     while (1)
     {
         int valrec = recv(new_socket, &received_message, sizeof(received_message), 0);
+        if (valrec <= 0)
+        {
+            // Connection closed or error occurred
+            printf("client %d disconnected\n", new_socket);
+            close(new_socket);
+            pthread_exit(NULL);
+        }
         if (received_message.type == 0) // login request
         {
             printf("Login request received from client: %d userId: %d\n", new_socket, received_message.from);
