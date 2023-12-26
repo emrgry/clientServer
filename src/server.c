@@ -24,6 +24,7 @@ typedef struct // Struct to represent a message
         0       /  login request
         1       /  regular message
         2       /  registration request
+        3       /  confirmation message
     */
     int type;
     char body[1024];
@@ -96,6 +97,62 @@ void handleLoginRequest(int newSocket, Message receivedMessage, int *userMap)
     }
 }
 
+void handleRegistrationRequest(int newSocket, Message receivedMessage, int *userMap)
+{
+    printf("Registration request received from client: %d userId: %d\n", newSocket, receivedMessage.from);
+
+    // Extract user's information from receivedMessage.body
+    char *username = strtok(receivedMessage.body, ",");
+    char *phoneNumber = strtok(NULL, ",");
+    char *name = strtok(NULL, ",");
+    char *surname = strtok(NULL, ",");
+
+    // Print received information
+    printf("Received registration request:\n");
+    printf("Username: %s\n", username);
+    printf("Phone number: %s\n", phoneNumber);
+    printf("Name: %s\n", name);
+    printf("Surname: %s\n", surname);
+
+    // Open the file for appending
+    FILE *file = fopen("TerChatApp/users/user_list.txt", "a");
+    if (file == NULL)
+    {
+        printf("Error opening file\n");
+        return;
+    }
+    // Write the user's information to the file
+    fprintf(file, "%s,%s,%s,%s,%s\n", receivedMessage.from, username, phoneNumber, name, surname);
+    fclose(file);
+
+    // Create a directory for the user
+    char *dirPath = malloc((strlen("TerChatApp/users/") + sizeof(receivedMessage.from) + 1) * sizeof(char));
+    sprintf(dirPath, "TerChatApp/users/%d", receivedMessage.from);
+    mkdir(dirPath, 0700);
+
+    // Create a file for the user's contact list
+    char *filePath = malloc((strlen(dirPath) + strlen("/contact_list.txt") + 1) * sizeof(char));
+    sprintf(filePath, "%s/contact_list.txt", dirPath);
+    FILE *file = fopen(filePath, "w");
+    fclose(file);
+    free(filePath);
+
+    // Create a file for the user's messages
+    filePath = malloc((strlen(dirPath) + strlen("/messages.txt") + 1) * sizeof(char));
+    sprintf(filePath, "%s/messages.txt", dirPath);
+    file = fopen(filePath, "w");
+    fclose(file);
+
+    free(filePath);
+    free(dirPath);
+
+    // Send a confirmation message back to the client
+    Message confirmationMessage;
+    confirmationMessage.type = 3; // Assuming 3 is the type for a registration confirmation
+    strcpy(confirmationMessage.body, "Registration successful");
+    send(newSocket, &confirmationMessage, sizeof(confirmationMessage), 0);
+}
+
 void *handleClient(void *args)
 {
     ThreadArgs *threadArgs = (ThreadArgs *)args;
@@ -118,9 +175,14 @@ void *handleClient(void *args)
         {
             handleLoginRequest(newSocket, receivedMessage, userMap);
         }
+
         else if (receivedMessage.type == 1)
         {
             printf("Message from client %d: %s\n", newSocket, receivedMessage.body);
+        }
+        else if (receivedMessage.type == 2)
+        {
+            handleRegistrationRequest(newSocket, receivedMessage, userMap);
         }
         else
         {

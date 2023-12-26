@@ -17,6 +17,7 @@ typedef struct
         0       /  login request
         1       /  regular message
         2       /  registration request
+        3       /  confirmation message
     */
     int type; // -1 for disconnect, 0 for login request, 1 for regular message
     char body[1024];
@@ -52,7 +53,7 @@ void disconnect(int sock, int user_id)
     printf("Disconnect request sent to server\n");
 }
 
-void registerUser(int sock)
+void registerUser(int sock, int userId)
 {
     printf("Please register for using this app\n");
 
@@ -76,6 +77,7 @@ void registerUser(int sock)
     // Create a Message for the user's information
     Message userInfo;
     userInfo.type = 2;
+    userInfo.from = userId;
     sprintf(userInfo.body, "%s,%s,%s,%s", username, phoneNumber, name, surname);
 
     // Send user info to server
@@ -91,7 +93,7 @@ void registerUser(int sock)
 
 int main(int argc, char *argv[])
 {
-    int user_id = validateUserId(argv[1]);
+    int userId = validateUserId(argv[1]);
 
     int sock = 0;
     struct sockaddr_in serverAddr;
@@ -127,7 +129,7 @@ int main(int argc, char *argv[])
     // Send user_id to server
     Message loginMessage;
     loginMessage.type = 0;
-    loginMessage.from = user_id;
+    loginMessage.from = userId;
     loginMessage.to = -1; // this message will processed by server
     send(sock, &loginMessage, sizeof(loginMessage), 0);
     printf("Login request sent to server\n");
@@ -144,6 +146,7 @@ int main(int argc, char *argv[])
         // Create a Message for the user's message
         Message userMessage;
         userMessage.type = 1;
+        userMessage.from = userId;
         strcpy(userMessage.body, buffer);
         userMessage.to = -1; // Sending to server
 
@@ -162,7 +165,12 @@ int main(int argc, char *argv[])
         }
         else if (receivedMessage.type == 2) // registration request
         {
-            registerUser(sock);
+            registerUser(sock, userId);
+        }
+        else if (receivedMessage.type == 3)
+        {
+            // confirmation message
+            printf("Server: %s\n", receivedMessage.body);
         }
         else
         {
