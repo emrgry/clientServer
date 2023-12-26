@@ -12,7 +12,6 @@ int main()
     int sock = 0;
     struct sockaddr_in server_addr;
     char buffer[BUFFER_SIZE] = {0};
-    const char *message = "Hello from client";
 
     // socket file descriptor
     sock = socket(AF_INET, SOCK_STREAM, 0);
@@ -41,16 +40,20 @@ int main()
 
     while (1)
     {
+        // Clear the buffer
+        memset(buffer, 0, sizeof(buffer));
+
+        // Read message from user
+        printf("Enter message: ");
+        fgets(buffer, BUFFER_SIZE, stdin);
+
         // Send message to server
-        send(sock, message, strlen(message), 0);
+        send(sock, buffer, strlen(buffer), 0);
         printf("Message sent to server\n");
 
         // Receive message from server
         int valread = recv(sock, buffer, BUFFER_SIZE, 0);
         printf("Server: %s\n", buffer);
-
-        // Clear the buffer
-        memset(buffer, 0, sizeof(buffer));
     }
 
     return 0;
