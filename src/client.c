@@ -6,9 +6,13 @@
 
 #define PORT 8081
 #define BUFFER_SIZE 1024
+#define MAX_USER_NAME 20
 
-int main()
+int main(int argc, char *argv[])
 {
+    char user_name[MAX_USER_NAME] = argv[1];
+    printf("User name: %s\n", user_name);
+    printf("First argument: %s\n", argv[1]);
     int sock = 0;
     struct sockaddr_in server_addr;
     char buffer[BUFFER_SIZE] = {0};
