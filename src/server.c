@@ -13,7 +13,7 @@
 typedef struct // Struct to pass arguments to the thread
 {
     int newSocket;
-    int *userMap;
+    // int *userMap;
 } ThreadArgs;
 
 typedef struct // Struct to represent a message
@@ -42,16 +42,15 @@ void notifyClientsAndShutdown()
         send(i, &disconnectMessage, sizeof(disconnectMessage), 0);
         close(i);
     }
-
     close(0);
 }
 
-void disconnectClient(int newSocket, int *userMap)
+void disconnectClient(int newSocket)
 {
-    int userId = userMap[newSocket];
-    printf("Client with user_id %d disconnected\n", userId);
+    // int userId = userMap[newSocket];
+    printf("Client with  %d disconnected\n", newSocket);
     close(newSocket);
-    userMap[newSocket] = -1; // Remove the user from the map
+    // userMap[newSocket] = -1; // Remove the user from the map
     pthread_exit(NULL);
 }
 
@@ -78,14 +77,14 @@ int isUserRegistered(int userId)
     return 0; // User is not registered
 }
 
-void handleLoginRequest(int newSocket, Message receivedMessage, int *userMap)
+void handleLoginRequest(int newSocket, Message receivedMessage)
 {
     printf("Login request received from client: %d userId: %d\n", newSocket, receivedMessage.from);
     if (isUserRegistered(receivedMessage.from))
     {
         printf("User is registered\n");
         // Continue with login process
-        userMap[newSocket] = receivedMessage.from;
+        // userMap[newSocket] = receivedMessage.from;
     }
     else
     {
@@ -97,7 +96,7 @@ void handleLoginRequest(int newSocket, Message receivedMessage, int *userMap)
     }
 }
 
-void handleRegistrationRequest(int newSocket, Message receivedMessage, int *userMap)
+void handleRegistrationRequest(int newSocket, Message receivedMessage)
 {
     printf("Registration request received from client: %d userId: %d\n", newSocket, receivedMessage.from);
 
@@ -156,7 +155,7 @@ void *handleClient(void *args)
 {
     ThreadArgs *threadArgs = (ThreadArgs *)args;
     int newSocket = threadArgs->newSocket;
-    int *userMap = threadArgs->userMap;
+    // int *userMap = threadArgs->userMap;
     Message receivedMessage;
 
     while (1)
@@ -165,15 +164,15 @@ void *handleClient(void *args)
         if (valrec <= 0) // Client disconnected
         {
             printf("Client %d disconnected\n", newSocket);
-            disconnectClient(newSocket, userMap);
+            disconnectClient(newSocket);
         }
         if (receivedMessage.type == -1) // disconnect request
         {
-            disconnectClient(newSocket, userMap);
+            disconnectClient(newSocket);
         }
         else if (receivedMessage.type == 0) // login request
         {
-            handleLoginRequest(newSocket, receivedMessage, userMap);
+            handleLoginRequest(newSocket, receivedMessage);
         }
 
         else if (receivedMessage.type == 1)
@@ -182,7 +181,7 @@ void *handleClient(void *args)
         }
         else if (receivedMessage.type == 2)
         {
-            handleRegistrationRequest(newSocket, receivedMessage, userMap);
+            handleRegistrationRequest(newSocket, receivedMessage);
         }
         else
         {
@@ -196,7 +195,14 @@ void *handleClient(void *args)
 
 int main()
 {
-    int userMap[MAX_USERS];          // Array to map socket numbers to user IDs
+    // I got error so I disable disconnect feature
+    // int userMap[MAX_USERS]; // Array to map socket numbers to user IDs
+    // int *userMap = malloc(MAX_USERS * sizeof(int));
+    // if (userMap == NULL)
+    // {
+    //     fprintf(stderr, "Failed to allocate memory for userMap\n");
+    //     exit(1);
+    // }
     mkdir("TerChatApp", 0777);       // Create the TerChatApp directory if it does not exist
     mkdir("TerChatApp/users", 0777); // Create the users directory if it does not exist
 
@@ -249,7 +255,7 @@ int main()
         clients[threadCount] = newClient;
         ThreadArgs *args = malloc(sizeof(ThreadArgs));
         args->newSocket = newClient;
-        args->userMap = userMap;
+        // args->userMap = userMap;
 
         int thread_create = pthread_create(&threads[threadCount], NULL, handleClient, (void *)&clients[threadCount]);
         if (thread_create < 0)
