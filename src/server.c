@@ -164,6 +164,7 @@ void *handleClient(void *args)
         int valrec = recv(newSocket, &receivedMessage, sizeof(receivedMessage), 0);
         if (valrec <= 0) // Client disconnected
         {
+            printf("Client %d disconnected\n", newSocket);
             disconnectClient(newSocket, userMap);
         }
         if (receivedMessage.type == -1) // disconnect request
