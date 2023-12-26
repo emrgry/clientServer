@@ -155,7 +155,7 @@ void handleRegistrationRequest(int newSocket, Message receivedMessage)
     strcpy(confirmationMessage.body, "registered");
     send(newSocket, &confirmationMessage, sizeof(confirmationMessage), 0);
     char message[1000];
-    sprintf(message, "registered", receivedMessage.from);
+    strcpy(message, "registered");
     send(newSocket, message, strlen(message), 0);
 }
 
