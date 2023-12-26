@@ -66,7 +66,7 @@ void *handle_client(void *socket_fd)
         {
             printf("Login request received from client: %d userId: %d\n", new_socket, received_message.from);
             // Save user_id to a file
-            FILE *file = fopen("TerChatApp/users/user_list.txt", "a");
+            FILE *file = fopen("user_list.txt", "a");
             if (file != NULL)
             {
                 printf("Saving user_id to file\n");
