@@ -6,14 +6,24 @@
 
 #define PORT 8081
 #define BUFFER_SIZE 1024
-#define MAX_USER_NAME_LENGTH 20
+#define MAX_USER_NAME_LENGTH 4
 
 int main(int argc, char *argv[])
 {
-    char user_name[MAX_USER_NAME_LENGTH];
-    strcpy(user_name, argv[1]);
+    char *end;
+    long userId = strtol(argv[1], &end, 10);
 
-    printf("User name: %s\n", user_name);
+    if (*end != '\0' || end == argv[1])
+    {
+        printf("Error: Argument is not a valid integer\n");
+        exit(EXIT_FAILURE);
+    }
+
+    printf("User ID: %ld\n", userId);
+    // char user_name[MAX_USER_NAME_LENGTH];
+    // strcpy(user_name, argv[1]);
+
+    // printf("User name: %s\n", user_name);
 
     int sock = 0;
     struct sockaddr_in server_addr;
@@ -45,7 +55,7 @@ int main(int argc, char *argv[])
     }
 
     // Send user_name to server
-    send(sock, user_name, strlen(user_name), 0);
+    send(sock, userId, strlen(userId), 0);
     printf("User name sent to server\n");
 
     while (1)
