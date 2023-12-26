@@ -110,15 +110,15 @@ void *handleClient(void *args)
         int valrec = recv(newSocket, &receivedMessage, sizeof(receivedMessage), 0);
         if (valrec <= 0) // Client disconnected
         {
-            disconnectClient(newSocket, newSocket);
+            disconnectClient(newSocket, userMap);
         }
         if (receivedMessage.type == -1) // disconnect request
         {
-            disconnectClient(newSocket, newSocket);
+            disconnectClient(newSocket, userMap);
         }
         else if (receivedMessage.type == 0) // login request
         {
-            handleLoginRequest(newSocket, receivedMessage, newSocket);
+            handleLoginRequest(newSocket, receivedMessage, userMap);
         }
         else if (receivedMessage.type == 1)
         {
