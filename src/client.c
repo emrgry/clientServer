@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
     // Send user_id to server
     Message loginMessage;
     loginMessage.type = 0;
-    strcpy(loginMessage.from, user_id);
+    loginMessage.from = user_id;
     loginMessage.to = -1; // this message will processed by server
     send(sock, &loginMessage, sizeof(loginMessage), 0);
     printf("Login request sent to server\n");
