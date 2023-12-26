@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
     // strcpy(user_id, argv[1]);
 
     int sock = 0;
-    struct sockaddr_in server_addr;
+    struct sockaddr_in serverAddr;
     char buffer[BUFFER_SIZE] = {0};
 
     // socket file descriptor
@@ -64,17 +64,17 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(PORT);
+    serverAddr.sin_family = AF_INET;
+    serverAddr.sin_port = htons(PORT);
 
     // Convert IPv4 and IPv6 addresses from text to binary form
-    if (inet_pton(AF_INET, "127.0.0.1", &server_addr.sin_addr) <= 0)
+    if (inet_pton(AF_INET, "127.0.0.1", &serverAddr.sin_addr) <= 0)
     {
         printf("\nInvalid address/ Address not supported \n");
         return -1;
     }
 
-    int connection = connect(sock, (struct sockaddr *)&server_addr, sizeof(server_addr));
+    int connection = connect(sock, (struct sockaddr *)&serverAddr, sizeof(serverAddr));
     if (connection < 0)
     {
         perror("Error! Connection failed");
@@ -111,9 +111,9 @@ int main(int argc, char *argv[])
         printf("Message sent to server\n");
 
         // Receive message from server
-        Message received_message;
+        Message receivedMessage;
         int valrec = recv(sock, buffer, BUFFER_SIZE, 0);
-        if (valrec <= 0 || received_message.type == -1) // disconnect request or connection closed
+        if (valrec <= 0 || receivedMessage.type == -1) // disconnect request or connection closed
         {
             printf("Disconnect request received from server or connection closed\n");
             close(sock);

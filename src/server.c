@@ -4,14 +4,16 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <pthread.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 #define PORT 8081
 #define MAX_USERS 10
 
 typedef struct // Struct to pass arguments to the thread
 {
-    int new_socket;
-    int *user_map;
+    int newSocket;
+    int *userMap;
 } ThreadArgs;
 
 typedef struct // Struct to represent a message
@@ -29,40 +31,27 @@ typedef struct // Struct to represent a message
     int from; // -1 for server, user_id for specific user
 } Message;
 
-void handleSignal(int signal, int *user_map)
-{
-    if (signal == SIGINT)
-    {
-        notifyClientsAndShutdown(user_map);
-        exit(0);
-    }
-}
-
-void notifyClientsAndShutdown(int *user_map)
+void notifyClientsAndShutdown()
 {
     Message disconnectMessage;
     disconnectMessage.type = -1; // -1 indicates a disconnect message
-
-    for (int i = 0; i < MAX_USERS; i++)
+    int i;
+    for (i = 0; i < MAX_USERS; i++)
     {
-        if (user_map[i] != -1) // if there is a client connected on this socket
-        {
-            disconnectMessage.from = user_map[i];
-            send(i, &disconnectMessage, sizeof(disconnectMessage), 0);
-            close(i);
-            user_map[i] = -1;
-        }
+
+        send(i, &disconnectMessage, sizeof(disconnectMessage), 0);
+        close(i);
     }
 
     close(0);
 }
 
-void disconnectClient(int new_socket, int *user_map)
+void disconnectClient(int newSocket, int *userMap)
 {
-    int user_id = user_map[new_socket];
-    printf("Client with user_id %d disconnected\n", user_id);
-    close(new_socket);
-    user_map[new_socket] = -1; // Remove the user from the map
+    int userId = userMap[newSocket];
+    printf("Client with user_id %d disconnected\n", userId);
+    close(newSocket);
+    userMap[newSocket] = -1; // Remove the user from the map
     pthread_exit(NULL);
 }
 
@@ -89,154 +78,131 @@ int isUserRegistered(int userId)
     return 0; // User is not registered
 }
 
-void handleLoginRequest(int new_socket, Message received_message, int *user_map)
+void handleLoginRequest(int newSocket, Message receivedMessage, int *userMap)
 {
-    printf("Login request received from client: %d userId: %d\n", new_socket, received_message.from);
-    if (isUserRegistered(received_message.from))
+    printf("Login request received from client: %d userId: %d\n", newSocket, receivedMessage.from);
+    if (isUserRegistered(receivedMessage.from))
     {
         printf("User is registered\n");
         // Continue with login process
-        user_map[new_socket] = received_message.from;
+        userMap[newSocket] = receivedMessage.from;
     }
     else
     {
         printf("User is not registered\n");
         // Reject login request and send registration request to the client
-        Message registration_request;
-        registration_request.type = 2; // 2 indicates a registration request
-        registration_request.from = -1;
-        send(new_socket, &registration_request, sizeof(registration_request), 0);
+        Message registrationRequest;
+        registrationRequest.type = 2; // 2 indicates a registration request
+        registrationRequest.from = -1;
+        send(newSocket, &registrationRequest, sizeof(registrationRequest), 0);
     }
 }
 
-void *handle_client(void *args)
+void *handleClient(void *args)
 {
     ThreadArgs *threadArgs = (ThreadArgs *)args;
-    int new_socket = threadArgs->new_socket;
-    int *user_map = threadArgs->user_map;
-    Message received_message;
+    int newSocket = threadArgs->newSocket;
+    int *userMap = threadArgs->userMap;
+    Message receivedMessage;
 
     while (1)
     {
-        int valrec = recv(new_socket, &received_message, sizeof(received_message), 0);
+        int valrec = recv(newSocket, &receivedMessage, sizeof(receivedMessage), 0);
         if (valrec <= 0) // Client disconnected
         {
-            disconnectClient(new_socket, user_map);
+            disconnectClient(newSocket, newSocket);
         }
-        if (received_message.type == -1) // disconnect request
+        if (receivedMessage.type == -1) // disconnect request
         {
-            disconnectClient(new_socket, user_map);
+            disconnectClient(newSocket, newSocket);
         }
-        else if (received_message.type == 0) // login request
+        else if (receivedMessage.type == 0) // login request
         {
-            handleLoginRequest(new_socket, received_message, user_map);
-            // Save user_id to a file
-
-            // FILE *file = fopen("TerChatApp/users/user_list.txt", "a");
-            // if (file != NULL)
-            // {
-            //     printf("Saving user_id to file\n");
-            //     fprintf(file, "%d\n", received_message.from);
-            //     fclose(file);
-            // }
-            // else
-            // {
-            //     printf("Error opening file\n");
-            // }
-            // // Store the mapping from socket number to user_id
-            // user_map[new_socket] = received_message.from;
+            handleLoginRequest(newSocket, receivedMessage, newSocket);
         }
-        else if (received_message.type == 1)
+        else if (receivedMessage.type == 1)
         {
-            printf("Message from client %d: %s\n", new_socket, received_message.body);
+            printf("Message from client %d: %s\n", newSocket, receivedMessage.body);
         }
         else
         {
-            printf("Client %d: %s\n", new_socket, received_message.body);
+            printf("Client %d: %s\n", newSocket, receivedMessage.body);
         }
     }
 
-    // char buffer[1024] = {0};
-
-    // read(new_socket, buffer, 1024);
-    // strcat(buffer, " is online");
-
-    // send(new_socket, buffer, strlen(buffer), 0);
-    // printf("Message sent to client %d: %s\n", new_socket, buffer);
-
-    close(new_socket);
+    close(newSocket);
     pthread_exit(NULL);
 }
 
 int main()
 {
-    int user_map[MAX_USERS];         // Array to map socket numbers to user IDs
+    int userMap[MAX_USERS];          // Array to map socket numbers to user IDs
     mkdir("TerChatApp", 0777);       // Create the TerChatApp directory if it does not exist
     mkdir("TerChatApp/users", 0777); // Create the users directory if it does not exist
 
     int clients[MAX_USERS] = {0};
     pthread_t threads[MAX_USERS];
-    int thread_count = 0;
+    int threadCount = 0;
 
-    int server_sock = 0;
-    struct sockaddr_in serv_addr;
-    int addrlen = sizeof(serv_addr);
+    int serverSock = 0;
+    struct sockaddr_in servAddr;
+    int addrlen = sizeof(servAddr);
 
-    server_sock = socket(AF_INET, SOCK_STREAM, 0);
-    if (server_sock < 0)
+    serverSock = socket(AF_INET, SOCK_STREAM, 0);
+    if (serverSock < 0)
     {
         perror("Server Socket Failed");
         exit(EXIT_FAILURE);
     }
 
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_addr.s_addr = INADDR_ANY;
-    serv_addr.sin_port = htons(PORT);
+    servAddr.sin_family = AF_INET;
+    servAddr.sin_addr.s_addr = INADDR_ANY;
+    servAddr.sin_port = htons(PORT);
 
     // bind the socket
-    if (bind(server_sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
+    if (bind(serverSock, (struct sockaddr *)&servAddr, sizeof(servAddr)) < 0)
     {
         perror("Binding Server socket err");
         exit(EXIT_FAILURE);
     }
 
     // listen the prot
-    if (listen(server_sock, 5) < 0)
+    if (listen(serverSock, 5) < 0)
     {
         perror("server listen err");
         exit(EXIT_FAILURE);
     }
 
-    signal(SIGINT, handleSignal);
+    atexit(notifyClientsAndShutdown);
 
     while (1)
     {
-        int new_client = accept(server_sock, (struct sockaddr *)&serv_addr, (socklen_t *)&addrlen);
-        if (new_client < 0)
+        int newClient = accept(serverSock, (struct sockaddr *)&servAddr, (socklen_t *)&addrlen);
+        if (newClient < 0)
         {
             perror("Error! When server accepting new client");
             exit(EXIT_FAILURE);
         }
 
-        printf("\nnew client connected with client id: %d\n", new_client);
+        printf("\nnew client connected with client id: %d\n", newClient);
 
-        clients[thread_count] = new_client;
+        clients[threadCount] = newClient;
         ThreadArgs *args = malloc(sizeof(ThreadArgs));
-        args->new_socket = new_client;
-        args->user_map = user_map;
+        args->newSocket = newClient;
+        args->userMap = userMap;
 
-        int thread_create = pthread_create(&threads[thread_count], NULL, handle_client, (void *)&clients[thread_count]);
+        int thread_create = pthread_create(&threads[threadCount], NULL, handleClient, (void *)&clients[threadCount]);
         if (thread_create < 0)
         {
             perror("thread create for client error");
             exit(EXIT_FAILURE);
         }
 
-        thread_count++;
-        if (thread_count >= MAX_USERS)
+        threadCount++;
+        if (threadCount >= MAX_USERS)
         {
             printf("too many clients.Abort new connections\n");
-            close(new_client);
+            close(newClient);
         }
     }
 
