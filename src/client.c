@@ -153,7 +153,7 @@ int main(int argc, char *argv[])
 
         // Receive message from server
         Message receivedMessage;
-        int valrec = recv(sock, buffer, BUFFER_SIZE, 0);
+        int valrec = recv(sock, &receivedMessage, BUFFER_SIZE, 0);
         if (valrec <= 0 || receivedMessage.type == -1) // disconnect request or connection closed
         {
             printf("Disconnect request received from server or connection closed\n");
