@@ -16,6 +16,17 @@ typedef struct
     int from; // -1 for server, user_id for specific user
 } Message;
 
+int user_map[MAX_USERS]; // Array to map socket numbers to user IDs
+
+void disconnectClient(int new_socket, int user_map[])
+{
+    int user_id = user_map[new_socket];
+    printf("Client with user_id %d disconnected\n", user_id);
+    close(new_socket);
+    user_map[new_socket] = -1; // Remove the user from the map
+    pthread_exit(NULL);
+}
+
 void *handle_client(void *socket_fd)
 {
     int new_socket = *(int *)socket_fd;
@@ -26,12 +37,13 @@ void *handle_client(void *socket_fd)
         int valrec = recv(new_socket, &received_message, sizeof(received_message), 0);
         if (valrec <= 0)
         {
-            // Connection closed or error occurred
-            printf("client %d disconnected\n", new_socket);
-            close(new_socket);
-            pthread_exit(NULL);
+            disconnectClient(new_socket, user_map);
         }
-        if (received_message.type == 0) // login request
+        if (received_message.type == -1) // disconnect request
+        {
+            disconnectClient(new_socket, user_map);
+        }
+        else if (received_message.type == 0) // login request
         {
             printf("Login request received from client: %d userId: %d\n", new_socket, received_message.from);
             // Save user_id to a file
@@ -41,6 +53,8 @@ void *handle_client(void *socket_fd)
                 fprintf(file, "%d\n", received_message.from);
                 fclose(file);
             }
+            // Store the mapping from socket number to user_id
+            user_map[new_socket] = received_message.from;
         }
         else if (received_message.type == 1)
         {

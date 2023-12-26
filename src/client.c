@@ -10,7 +10,7 @@
 
 typedef struct
 {
-    int type; // 0 for login request, 1 for regular message
+    int type; // -1 for disconnect, 0 for login request, 1 for regular message
     char body[1024];
     int to;   // -1 for server, user_id for specific user
     int from; // for the client, this is the user_id
@@ -32,6 +32,17 @@ int validateUserId(char *userIdStr)
         exit(EXIT_FAILURE);
     }
     return userId;
+}
+
+// Send a disconnect message to the server
+void disconnect(int sock, int user_id)
+{
+    Message disconnectMessage;
+    disconnectMessage.type = -1; // -1 indicates a disconnect message
+    disconnectMessage.from = user_id;
+    disconnectMessage.to = -1; // this message will be processed by the server
+    send(sock, &disconnectMessage, sizeof(disconnectMessage), 0);
+    printf("Disconnect request sent to server\n");
 }
 
 int main(int argc, char *argv[])
