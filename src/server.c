@@ -10,13 +10,32 @@
 
 typedef struct
 {
-    int type; // 0 for login request, 1 for regular message
+    int type; // -1 for disconnect, 0 for login request, 1 for regular message
     char body[1024];
     int to;   // -1 for server, user_id for specific user
     int from; // -1 for server, user_id for specific user
 } Message;
 
 int user_map[MAX_USERS]; // Array to map socket numbers to user IDs
+
+void notifyClientsAndShutdown(int server_sock, int user_map[])
+{
+    Message disconnectMessage;
+    disconnectMessage.type = -1; // -1 indicates a disconnect message
+
+    for (int i = 0; i < MAX_USERS; i++)
+    {
+        if (user_map[i] != -1) // if there is a client connected on this socket
+        {
+            disconnectMessage.from = user_map[i];
+            send(i, &disconnectMessage, sizeof(disconnectMessage), 0);
+            close(i);
+        }
+    }
+
+    close(server_sock);
+    exit(0);
+}
 
 void disconnectClient(int new_socket, int user_map[])
 {
@@ -113,6 +132,8 @@ int main()
         perror("server listen err");
         exit(EXIT_FAILURE);
     }
+
+    atexit(notifyClientsAndShutdown);
 
     while (1)
     {

@@ -111,7 +111,14 @@ int main(int argc, char *argv[])
         printf("Message sent to server\n");
 
         // Receive message from server
-        int valread = recv(sock, buffer, BUFFER_SIZE, 0);
+        Message received_message;
+        int valrec = recv(sock, buffer, BUFFER_SIZE, 0);
+        if (valrec <= 0 || received_message.type == -1) // disconnect request or connection closed
+        {
+            printf("Disconnect request received from server or connection closed\n");
+            close(sock);
+            exit(0);
+        }
         printf("Server: %s\n", buffer);
     }
 
