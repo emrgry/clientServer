@@ -38,7 +38,6 @@ void notifyClientsAndShutdown()
     int i;
     for (i = 0; i < MAX_USERS; i++)
     {
-
         send(i, &disconnectMessage, sizeof(disconnectMessage), 0);
         close(i);
     }

@@ -6,10 +6,18 @@
 
 #define PORT 8081
 #define BUFFER_SIZE 1024
+#define REGISTRATION_BUFFER_SIZE 64
 #define MAX_USER_ID_LENGTH 3
 
 typedef struct
 {
+    /*
+    message type / explanation
+        -1      /  disconnect
+        0       /  login request
+        1       /  regular message
+        2       /  registration request
+    */
     int type; // -1 for disconnect, 0 for login request, 1 for regular message
     char body[1024];
     int to;   // -1 for server, user_id for specific user
@@ -40,17 +48,50 @@ void disconnect(int sock, int user_id)
     Message disconnectMessage;
     disconnectMessage.type = -1; // -1 indicates a disconnect message
     disconnectMessage.from = user_id;
-    disconnectMessage.to = -1; // this message will be processed by the server
     send(sock, &disconnectMessage, sizeof(disconnectMessage), 0);
     printf("Disconnect request sent to server\n");
+}
+
+void registerUser(int sock)
+{
+    printf("Please register for using this app\n");
+
+    char *username = malloc(REGISTRATION_BUFFER_SIZE * sizeof(char));
+    char *phoneNumber = malloc(REGISTRATION_BUFFER_SIZE * sizeof(char));
+    char *name = malloc(REGISTRATION_BUFFER_SIZE * sizeof(char));
+    char *surname = malloc(REGISTRATION_BUFFER_SIZE * sizeof(char));
+
+    printf("Enter your username: ");
+    fgets(username, REGISTRATION_BUFFER_SIZE, stdin);
+
+    printf("Enter your phone number: ");
+    fgets(phoneNumber, REGISTRATION_BUFFER_SIZE, stdin);
+
+    printf("Enter your name: ");
+    fgets(name, REGISTRATION_BUFFER_SIZE, stdin);
+
+    printf("Enter your surname: ");
+    fgets(surname, REGISTRATION_BUFFER_SIZE, stdin);
+
+    // Create a Message for the user's information
+    Message userInfo;
+    userInfo.type = 2;
+    sprintf(userInfo.body, "%s,%s,%s,%s", username, phoneNumber, name, surname);
+
+    // Send user info to server
+    send(sock, &userInfo, sizeof(userInfo), 0);
+    printf("User info sent to server\n");
+
+    // Free the allocated memory
+    free(username);
+    free(phoneNumber);
+    free(name);
+    free(surname);
 }
 
 int main(int argc, char *argv[])
 {
     int user_id = validateUserId(argv[1]);
-
-    // char user_id[MAX_USER_ID_LENGTH];
-    // strcpy(user_id, argv[1]);
 
     int sock = 0;
     struct sockaddr_in serverAddr;
@@ -119,6 +160,11 @@ int main(int argc, char *argv[])
             close(sock);
             exit(0);
         }
+        else if (receivedMessage.type == 2) // registration request
+        {
+            registerUser(sock);
+        }
+
         printf("Server: %s\n", buffer);
     }
 
