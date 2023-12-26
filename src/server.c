@@ -18,7 +18,7 @@ typedef struct
 
 int user_map[MAX_USERS]; // Array to map socket numbers to user IDs
 
-void notifyClientsAndShutdown(int server_sock, int user_map[])
+void notifyClientsAndShutdown()
 {
     Message disconnectMessage;
     disconnectMessage.type = -1; // -1 indicates a disconnect message
@@ -30,11 +30,11 @@ void notifyClientsAndShutdown(int server_sock, int user_map[])
             disconnectMessage.from = user_map[i];
             send(i, &disconnectMessage, sizeof(disconnectMessage), 0);
             close(i);
+            user_map[i] = -1;
         }
     }
 
-    close(server_sock);
-    exit(0);
+    close(0);
 }
 
 void disconnectClient(int new_socket, int user_map[])
