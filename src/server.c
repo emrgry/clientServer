@@ -133,7 +133,7 @@ void handleRegistrationRequest(int newSocket, Message receivedMessage, int *user
     // Create a file for the user's contact list
     char *filePath = malloc((strlen(dirPath) + strlen("/contact_list.txt") + 1) * sizeof(char));
     sprintf(filePath, "%s/contact_list.txt", dirPath);
-    FILE *file = fopen(filePath, "w");
+    file = fopen(filePath, "w");
     fclose(file);
     free(filePath);
 
