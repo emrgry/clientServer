@@ -69,8 +69,13 @@ void *handle_client(void *socket_fd)
             FILE *file = fopen("TerChatApp/users/user_list.txt", "a");
             if (file != NULL)
             {
+                printf("Saving user_id to file\n");
                 fprintf(file, "%d\n", received_message.from);
                 fclose(file);
+            }
+            else
+            {
+                printf("Error opening file\n");
             }
             // Store the mapping from socket number to user_id
             user_map[new_socket] = received_message.from;
