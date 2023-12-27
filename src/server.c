@@ -232,6 +232,7 @@ void addUserToContactList(int sock, int userId, User user)
 {
     char filePath[100];
     sprintf(filePath, "TerChatApp/users/%d/contact_list.txt", userId);
+    printf("Adding user to contact list: %s\n", filePath);
     FILE *file = fopen(filePath, "a");
     if (file == NULL)
     {

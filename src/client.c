@@ -177,10 +177,11 @@ User CreateUser()
     return newUser;
 }
 
-void addUser(int sock, User user)
+void addUser(int sock, int userId, User user)
 {
     Message msg;
-    msg.type = 5;                           // Set the message type to 5 (add user)
+    msg.type = 5;
+    msg.from = userId;                      // Set the message type to 5 (add user)
     memcpy(&msg.body, &user, sizeof(User)); // Copy the user struct into the message body
 
     if (send(sock, &msg, sizeof(Message), 0) == -1)
@@ -290,7 +291,7 @@ int main(int argc, char *argv[])
             break;
         case 2:
             // Call function to add user
-            addUser(sock, CreateUser());
+            addUser(sock, userId, CreateUser());
             break;
         case 3:
             // Call function to delete user
