@@ -183,6 +183,7 @@ int main(int argc, char *argv[])
         else if (receivedMessage.type == 3)
         {
             // confirmation message
+            printf("confirmed");
             printf("Server: %s\n", receivedMessage.body);
         }
         else
