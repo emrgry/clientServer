@@ -456,22 +456,28 @@ void countUnreadMessagesAndSend(int sock, int userId)
         fclose(file);
 
         // Send the counts for each user to the client
+        char msgBody[1024] = ""; // This will hold the entire message body
+
         for (int i = 0; i < MAX_USERS; i++)
         {
             if (unreadCounts[i] > 0)
             {
-                Message msg;
-                msg.type = 8; // type 8 for unread message count
-                sprintf(msg.body, "%d Unread message from user %d\n", unreadCounts[i], i);
-                msg.to = userId;
-                msg.from = -1; // from server
-
-                printf("Sending message to client %d: %s\n", sock, msg.body);
-                if (send(sock, &msg, sizeof(msg), 0) == -1)
-                {
-                    perror("Error sending message");
-                }
+                char temp[128];
+                sprintf(temp, "%d Unread message from user %d\n", unreadCounts[i], i);
+                strcat(msgBody, temp); // Append the count for this user to the message body
             }
+        }
+
+        Message msg;
+        msg.type = 8; // type 8 for unread message count
+        strcpy(msg.body, msgBody);
+        msg.to = userId;
+        msg.from = -1; // from server
+
+        printf("Sending message to client %d: %s\n", sock, msg.body);
+        if (send(sock, &msg, sizeof(msg), 0) == -1)
+        {
+            perror("Error sending message");
         }
         sendConfirmationMessage(sock, "Unread message count sent");
     }
