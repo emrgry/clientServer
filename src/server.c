@@ -427,6 +427,7 @@ void processMessage(int sock, int fromUserId, int toUserId, int recipientSocket,
 
 void countUnreadMessagesAndSend(int sock, int userId)
 {
+    printf("Counting unread messages for user %d\n", userId);
     char filename[50];
     sprintf(filename, "TerChatApp/users/%d/messages.txt", userId);
 
