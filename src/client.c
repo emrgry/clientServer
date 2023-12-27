@@ -25,6 +25,16 @@ typedef struct
     int from; // for the client, this is the user_id
 } Message;
 
+typedef struct
+{
+    /* data */
+    int userId;
+    char username[REGISTRATION_BUFFER_SIZE];
+    char phoneNumber[REGISTRATION_BUFFER_SIZE];
+    char name[REGISTRATION_BUFFER_SIZE];
+    char surname[REGISTRATION_BUFFER_SIZE];
+} User;
+
 int validateUserId(char *userIdStr)
 {
     char *endChar;
@@ -104,6 +114,23 @@ void registerUser(int sock, int userId)
     free(surname);
 }
 
+int HandleMenu()
+{
+    printf("Please type your choice:\n");
+    printf("1 - List contacts\n");
+    printf("2 - Add user\n");
+    printf("3 - Delete user\n");
+    printf("4 - Send message\n");
+    printf("5 - Check message\n");
+    printf("6 - Disconnect\n");
+
+    int choice;
+    scanf("%d", &choice);
+    getchar(); // To consume the newline character after the number
+
+    return choice;
+}
+
 int main(int argc, char *argv[])
 {
     int userId = validateUserId(argv[1]);
@@ -149,23 +176,6 @@ int main(int argc, char *argv[])
 
     while (1)
     {
-        // Clear the buffer
-        memset(buffer, 0, sizeof(buffer));
-
-        // Read message from user
-        printf("Enter message: ");
-        fgets(buffer, BUFFER_SIZE, stdin);
-
-        // Create a Message for the user's message
-        // Message userMessage;
-        // userMessage.type = 1;
-        // userMessage.from = userId;
-        // strcpy(userMessage.body, buffer);
-        // userMessage.to = -1; // Sending to server
-
-        // // Send message to server
-        // send(sock, &userMessage, sizeof(userMessage), 0);
-        // printf("Message sent to server\n");
 
         // Receive message from server
         Message receivedMessage;
@@ -189,6 +199,31 @@ int main(int argc, char *argv[])
         else
         {
             printf("Server %d: %s, message type %d\n", sock, receivedMessage.body, receivedMessage.type);
+        }
+
+        // Clear the buffer
+        memset(buffer, 0, sizeof(buffer));
+
+        switch (HandleMenu())
+        {
+        case 1:
+            // Call function to list contacts
+            break;
+        case 2:
+            // Call function to add user
+            break;
+        case 3:
+            // Call function to delete user
+            break;
+        case 4:
+            // Call function to send message
+            break;
+        case 5:
+            // Call function to check message
+            break;
+        default:
+            printf("Invalid choice. Please try again.\n");
+            continue;
         }
     }
 
