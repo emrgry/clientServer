@@ -60,7 +60,8 @@ int isUserRegistered(int userId)
     if (file != NULL)
     {
         int id;
-        while (fscanf(file, "%d", &id) != EOF)
+        char username[1024], phoneNumber[1024], name[1024], surname[1024];
+        while (fscanf(file, "%d,%[^,],%[^,],%[^,],%[^\n]\n", &id, username, phoneNumber, name, surname) != EOF)
         {
             if (id == userId)
             {
