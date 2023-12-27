@@ -250,6 +250,7 @@ void addUserToContactList(int sock, int userId, User user)
         {
             printf("User already exists in contact list\n");
             fclose(file);
+            sendConfirmationMessage(sock, "User already exists in contact list");
             return;
         }
     }
