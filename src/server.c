@@ -236,7 +236,8 @@ void sendContactList(int sock, int userId)
     }
 
     // Send the users array to the client
-    for (int i = 0; i < userCount; i++)
+    int i;
+    for (i = 0; i < userCount; i++)
     {
         Message msg;
         msg.type = 4; // Set the message type to 4
@@ -335,7 +336,8 @@ void deleteUserFromFile(int sock, int userId, int userIdToDelete)
     }
 
     // Write all the lines back to the file, except for the line that contains the user ID to be deleted
-    for (int i = 0; i < lineCount; i++)
+    int i;
+    for (i = 0; i < lineCount; i++)
     {
         int userId;
         sscanf(lines[i], "%d", &userId);
@@ -551,7 +553,8 @@ int main()
         }
     }
 
-    for (int i = 0; i < threadCount; i++)
+    int i;
+    for (i = 0; i < threadCount; i++)
     {
         pthread_join(threads[i], NULL);
     }

@@ -186,7 +186,8 @@ void processUserList(Message receivedMessage, int sock, int userId)
     // memcpy(users, &receivedMessage.body, sizeof(receivedMessage.body)); // Copy the user structs from the message body
     memcpy(users, &receivedMessage.body, userCount * sizeof(User));
     printf("User ID, Name, Surname, Phone Number\n");
-    for (int i = 0; i < userCount; i++)
+    int i;
+    for (i = 0; i < userCount; i++)
     {
         printf("%d, %s, %s, %s\n", users[i].userId, users[i].name, users[i].surname, users[i].phoneNumber);
     }
