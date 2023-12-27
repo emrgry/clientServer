@@ -159,9 +159,9 @@ User CreateUser()
     scanf("%d", &newUser.userId);
     getchar(); // To consume the newline character after the number
 
-    printf("Enter username: ");
-    fgets(newUser.username, sizeof(newUser.username), stdin);
-    newUser.username[strcspn(newUser.username, "\n")] = 0; // Remove the newline character
+    // printf("Enter username: ");
+    // fgets(newUser.username, sizeof(newUser.username), stdin);
+    // newUser.username[strcspn(newUser.username, "\n")] = 0; // Remove the newline character
 
     printf("Enter phone number: ");
     fgets(newUser.phoneNumber, sizeof(newUser.phoneNumber), stdin);
