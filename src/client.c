@@ -152,6 +152,43 @@ void listContacts(int sock, int userId)
     }
 }
 
+User CreateUser()
+{
+    User newUser;
+    printf("Enter user ID: ");
+    scanf("%d", &newUser.userId);
+    getchar(); // To consume the newline character after the number
+
+    printf("Enter username: ");
+    fgets(newUser.username, sizeof(newUser.username), stdin);
+    newUser.username[strcspn(newUser.username, "\n")] = 0; // Remove the newline character
+
+    printf("Enter phone number: ");
+    fgets(newUser.phoneNumber, sizeof(newUser.phoneNumber), stdin);
+    newUser.phoneNumber[strcspn(newUser.phoneNumber, "\n")] = 0; // Remove the newline character
+
+    printf("Enter name: ");
+    fgets(newUser.name, sizeof(newUser.name), stdin);
+    newUser.name[strcspn(newUser.name, "\n")] = 0; // Remove the newline character
+
+    printf("Enter surname: ");
+    fgets(newUser.surname, sizeof(newUser.surname), stdin);
+    newUser.surname[strcspn(newUser.surname, "\n")] = 0; // Remove the newline character
+    return newUser;
+}
+
+void addUser(int sock, User user)
+{
+    Message msg;
+    msg.type = 5;                           // Set the message type to 5 (add user)
+    memcpy(&msg.body, &user, sizeof(User)); // Copy the user struct into the message body
+
+    if (send(sock, &msg, sizeof(Message), 0) == -1)
+    {
+        perror("Error sending user");
+    }
+}
+
 int main(int argc, char *argv[])
 {
     int userId = validateUserId(argv[1]);
@@ -253,6 +290,7 @@ int main(int argc, char *argv[])
             break;
         case 2:
             // Call function to add user
+            addUser(sock, CreateUser());
             break;
         case 3:
             // Call function to delete user
