@@ -384,7 +384,7 @@ int main(int argc, char *argv[])
         else if (receivedMessage.type == 8)
         {
             printf("%s", receivedMessage.body);
-            HandleMenu(sock, userId);
+            // HandleMenu(sock, userId);
         }
         else
         {

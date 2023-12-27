@@ -473,6 +473,7 @@ void countUnreadMessagesAndSend(int sock, int userId)
                 }
             }
         }
+        sendConfirmationMessage(sock, "Unread message count sent");
     }
     else
     {
