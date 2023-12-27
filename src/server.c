@@ -373,18 +373,18 @@ void processMessage(int sock, int fromUserId, int toUserId, int recipientSocket,
         return;
     }
 
-    // Send the message to the recipient
-    Message msg;
-    msg.type = 7;                                         // Set the message type to 7 (send message)
-    msg.from = fromUserId;                                // Set the from field to the current userId
-    msg.to = toUserId;                                    // Set the to field to the userId of the recipient
-    strncpy(msg.body, messageText, sizeof(msg.body) - 1); // Copy the message text into the body field
+    // // Send the message to the recipient
+    // Message msg;
+    // msg.type = 7;                                         // Set the message type to 7 (send message)
+    // msg.from = fromUserId;                                // Set the from field to the current userId
+    // msg.to = toUserId;                                    // Set the to field to the userId of the recipient
+    // strncpy(msg.body, messageText, sizeof(msg.body) - 1); // Copy the message text into the body field
 
-    if (send(recipientSocket, &msg, sizeof(msg), 0) == -1)
-    {
-        perror("Error sending message");
-        return;
-    }
+    // if (send(recipientSocket, &msg, sizeof(msg), 0) == -1)
+    // {
+    //     perror("Error sending message");
+    //     return;
+    // }
 
     char filename[50];
     FILE *file;
