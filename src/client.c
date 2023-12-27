@@ -172,7 +172,7 @@ void addUser(int sock, int userId, User user)
     }
 }
 
-int HandleMenu(int sock, int userId)
+void HandleMenu(int sock, int userId)
 {
     printf("<--------------------------->\n");
     printf("Please type your choice:\n");
