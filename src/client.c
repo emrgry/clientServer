@@ -269,9 +269,10 @@ int main(int argc, char *argv[])
             int userCount = receivedMessage.to; // sizeof(receivedMessage.body) / sizeof(User);
             // memcpy(users, &receivedMessage.body, sizeof(receivedMessage.body)); // Copy the user structs from the message body
             memcpy(users, &receivedMessage.body, userCount * sizeof(User));
+            printf("User ID, Name, Surname, Phone Number\n");
             for (int i = 0; i < userCount; i++)
             {
-                printf("Received user: %d, %s, %s\n", users[i].userId, users[i].name, users[i].surname);
+                printf("Received user: %d, %s, %s, %s\n", users[i].userId, users[i].name, users[i].surname, users[i].phoneNumber);
             }
 
             free(users);
