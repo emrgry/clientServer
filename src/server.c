@@ -235,7 +235,28 @@ void addUserToContactList(int sock, int userId, User user)
     char filePath[100];
     sprintf(filePath, "TerChatApp/users/%d/contact_list.txt", userId);
     printf("Adding user to contact list: %s\n", filePath);
-    FILE *file = fopen(filePath, "a");
+
+    FILE *file = fopen(filePath, "r");
+    if (file == NULL)
+    {
+        perror("Error opening contact list");
+        return;
+    }
+
+    User existingUser;
+    while (fscanf(file, "%d,%[^,],%[^,],%[^\n]\n", &existingUser.userId, existingUser.name, existingUser.surname, existingUser.phoneNumber) != EOF)
+    {
+        if (existingUser.userId == user.userId)
+        {
+            printf("User already exists in contact list\n");
+            fclose(file);
+            return;
+        }
+    }
+
+    fclose(file);
+
+    file = fopen(filePath, "a");
     if (file == NULL)
     {
         perror("Error opening contact list");

@@ -272,7 +272,7 @@ int main(int argc, char *argv[])
             printf("User ID, Name, Surname, Phone Number\n");
             for (int i = 0; i < userCount; i++)
             {
-                printf("Received user: %d, %s, %s, %s\n", users[i].userId, users[i].name, users[i].surname, users[i].phoneNumber);
+                printf("%d, %s, %s, %s\n", users[i].userId, users[i].name, users[i].surname, users[i].phoneNumber);
             }
 
             free(users);
