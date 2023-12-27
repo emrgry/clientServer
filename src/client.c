@@ -192,7 +192,6 @@ void processUserList(Message receivedMessage, int sock, int userId)
     }
 
     free(users);
-    HandleMenu(sock, userId);
 }
 
 void HandleMenu(int sock, int userId)
@@ -310,6 +309,7 @@ int main(int argc, char *argv[])
         {
             // list contacts
             processUserList(receivedMessage, sock, userId);
+            HandleMenu(sock, userId);
         }
         else
         {
