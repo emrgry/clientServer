@@ -270,7 +270,7 @@ int main()
 
     while (1)
     {
-        int newClient = accept(serverSock, (struct sockaddr *)&servAddr, (socklen_t *)&addrlen);
+        int newClient = accept(serverSock, (struct sockaddr *)&servAddr, (socklen_t *)addrlen);
         if (newClient < 0)
         {
             perror("Error! When server accepting new client");
