@@ -151,6 +151,8 @@ void handleRegistrationRequest(int newSocket, Message receivedMessage)
 
     // Send a confirmation message back to the client
     Message confirmationMessage;
+    confirmationMessage.from = -1; // -1 indicates a message from the server
+    confirmationMessage.to = receivedMessage.from;
     confirmationMessage.type = 3; // Assuming 3 is the type for a registration confirmation
     strcpy(confirmationMessage.body, "registered");
     send(newSocket, &confirmationMessage, sizeof(confirmationMessage), 0);

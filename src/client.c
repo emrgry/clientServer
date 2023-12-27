@@ -190,8 +190,6 @@ int main(int argc, char *argv[])
         {
             printf("Server %d: %s, message type %d\n", sock, receivedMessage.body, receivedMessage.type);
         }
-
-        printf("Server: %s\n", receivedMessage.body);
     }
 
     return 0;
