@@ -291,12 +291,20 @@ int main()
             exit(EXIT_FAILURE);
         }
 
+        // Detach the thread
+        pthread_detach(threads[threadCount]);
+
         threadCount++;
         if (threadCount >= MAX_USERS)
         {
             printf("too many clients.Abort new connections\n");
             close(newClient);
         }
+    }
+
+    for (int i = 0; i < threadCount; i++)
+    {
+        pthread_join(threads[i], NULL);
     }
 
     return 0;
