@@ -199,6 +199,7 @@ void sendContactList(int sock, int userId)
     if (file == NULL)
     {
         perror("Error opening contact list");
+        sendConfirmationMessage(sock, "Error occured in server");
         return;
     }
 
@@ -213,6 +214,12 @@ void sendContactList(int sock, int userId)
     }
 
     fclose(file);
+
+    if (userCount == 0)
+    {
+        sendConfirmationMessage(sock, "Contact list is empty");
+        return;
+    }
 
     // Send the users array to the client
     for (int i = 0; i < userCount; i++)
@@ -240,6 +247,7 @@ void addUserToContactList(int sock, int userId, User user)
     if (file == NULL)
     {
         perror("Error opening contact list");
+        sendConfirmationMessage(sock, "Error occured in server");
         return;
     }
 
