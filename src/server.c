@@ -14,7 +14,7 @@
 typedef struct // Struct to pass arguments to the thread
 {
     int newSocket;
-    // int *userMap;
+    int *clients;
 } ThreadArgs;
 
 typedef struct // Struct to represent a message
@@ -64,10 +64,23 @@ void sendConfirmationMessage(int newSocket, const char *message)
     send(newSocket, &confirmationMessage, sizeof(confirmationMessage), 0);
 }
 
-void disconnectClient(int newSocket)
+int findSocketByUserId(int userId, int *clients)
+{
+    // Check if the user ID is within the range of the array
+    if (userId < 0 || userId >= MAX_USERS)
+    {
+        printf("User ID out of range: %d\n", userId);
+        return -1;
+    }
+
+    // Return the socket associated with the user ID
+    return clients[userId];
+}
+
+void disconnectClient(int newSocket, int userId)
 {
     // int userId = userMap[newSocket];
-    printf("Client with  %d disconnected\n", newSocket);
+    printf("Client %d with userId %d  disconnected\n", newSocket, userId);
     close(newSocket);
     // userMap[newSocket] = -1; // Remove the user from the map
     pthread_exit(NULL);
@@ -340,11 +353,71 @@ void deleteUserFromFile(int sock, int userId, int userIdToDelete)
     sendConfirmationMessage(sock, "User deleted from contact list");
 }
 
+void writeMessageToFile(int sock, int fromUserId, int toUserId, int recipientSocket, char *messageText)
+{
+    // Find the socket associated with the recipient user ID
+
+    if (recipientSocket == -1)
+    {
+        printf("Recipient user ID not found: %d\n", toUserId);
+        return;
+    }
+
+    // Send the message to the recipient
+    Message msg;
+    msg.type = 7;                                         // Set the message type to 7 (send message)
+    msg.from = fromUserId;                                // Set the from field to the current userId
+    msg.to = toUserId;                                    // Set the to field to the userId of the recipient
+    strncpy(msg.body, messageText, sizeof(msg.body) - 1); // Copy the message text into the body field
+
+    if (send(recipientSocket, &msg, sizeof(msg), 0) == -1)
+    {
+        perror("Error sending message");
+        return;
+    }
+
+    char filename[50];
+    FILE *file;
+
+    // Get the current date and time
+    time_t t = time(NULL);
+    struct tm tm = *localtime(&t);
+    char date[50];
+    sprintf(date, "%d-%02d-%02d %02d:%02d:%02d", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+
+    // Write the message to the sender's messages file
+    sprintf(filename, "TerChatApp/users/%d/messages", fromUserId);
+    file = fopen(filename, "a");
+    if (file != NULL)
+    {
+        fprintf(file, "%s, %d, %s\n", date, toUserId, messageText);
+        fclose(file);
+    }
+    else
+    {
+        perror("Error opening sender's messages file");
+    }
+
+    // Write the message to the recipient's messages file
+    sprintf(filename, "TerChatApp/users/%d/messages", toUserId);
+    file = fopen(filename, "a");
+    if (file != NULL)
+    {
+        fprintf(file, "%s, %d, %s\n", date, fromUserId, messageText);
+        fclose(file);
+    }
+    else
+    {
+        perror("Error opening recipient's messages file");
+    }
+    sendConfirmationMessage(sock, "Message sent");
+}
+
 void *handleClient(void *args)
 {
     ThreadArgs *threadArgs = (ThreadArgs *)args;
     int newSocket = threadArgs->newSocket;
-    // int *userMap = threadArgs->userMap;
+    int *clients = threadArgs->clients;
     Message receivedMessage;
 
     while (1)
@@ -353,11 +426,11 @@ void *handleClient(void *args)
         if (valrec <= 0) // Client disconnected
         {
             printf("Client %d disconnected\n", newSocket);
-            disconnectClient(newSocket);
+            disconnectClient(newSocket, receivedMessage.from);
         }
         if (receivedMessage.type == -1) // disconnect request
         {
-            disconnectClient(newSocket);
+            disconnectClient(newSocket, receivedMessage.from);
         }
         else if (receivedMessage.type == 0) // login request
         {
@@ -385,6 +458,11 @@ void *handleClient(void *args)
         else if (receivedMessage.type == 6)
         {
             deleteUserFromFile(newSocket, receivedMessage.from, receivedMessage.to);
+        }
+        else if (receivedMessage.type == 7)
+        {
+            int recipientSocket = findSocketByUserId(receivedMessage.to, clients);
+            writeMessageToFile(newSocket, receivedMessage.from, receivedMessage.to, recipientSocket, receivedMessage.body);
         }
         else
         {
@@ -459,7 +537,7 @@ int main()
         clients[threadCount] = newClient;
         ThreadArgs *args = malloc(sizeof(ThreadArgs));
         args->newSocket = newClient;
-        // args->userMap = userMap;
+        args->clients = clients;
 
         int thread_create = pthread_create(&threads[threadCount], NULL, handleClient, (void *)args);
         if (thread_create < 0)

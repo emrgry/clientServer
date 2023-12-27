@@ -185,7 +185,6 @@ void processUserList(Message receivedMessage, int sock, int userId)
     int userCount = receivedMessage.to; // sizeof(receivedMessage.body) / sizeof(User);
     // memcpy(users, &receivedMessage.body, sizeof(receivedMessage.body)); // Copy the user structs from the message body
     memcpy(users, &receivedMessage.body, userCount * sizeof(User));
-    printf("<--------------------------->\n");
     printf("User ID, Name, Surname, Phone Number\n");
     for (int i = 0; i < userCount; i++)
     {
@@ -209,6 +208,37 @@ void deleteUser(int sock, int userId)
     if (send(sock, &msg, sizeof(msg), 0) == -1)
     {
         perror("Error sending delete user request");
+    }
+}
+
+void sendMessage(int sock, int userId)
+{
+    int recipientUserId;
+    printf("Enter the ID of the user to send the message to: ");
+    scanf("%d", &recipientUserId);
+
+    // Clear the input buffer
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF)
+    {
+    }
+
+    char messageText[256];
+    printf("Enter your message: ");
+    fgets(messageText, sizeof(messageText), stdin);
+
+    // Remove trailing newline
+    messageText[strcspn(messageText, "\n")] = 0;
+
+    Message msg;
+    msg.type = 7;                                         // Set the message type to 7 (send message)
+    msg.from = userId;                                    // Set the from field to the current userId
+    msg.to = recipientUserId;                             // Set the to field to the userId of the recipient
+    strncpy(msg.body, messageText, sizeof(msg.body) - 1); // Copy the message text into the body field
+
+    if (send(sock, &msg, sizeof(msg), 0) == -1)
+    {
+        perror("Error sending message");
     }
 }
 
@@ -329,6 +359,11 @@ int main(int argc, char *argv[])
         {
             // list contacts
             processUserList(receivedMessage, sock, userId);
+            HandleMenu(sock, userId);
+        }
+        else if (receivedMessage.type == 7)
+        {
+            printf("Message received from %d: %s\n", receivedMessage.from, receivedMessage.body);
             HandleMenu(sock, userId);
         }
         else
