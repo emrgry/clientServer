@@ -43,6 +43,13 @@ typedef struct
     char surname[REGISTRATION_BUFFER_SIZE];
 } User;
 
+typedef struct
+{
+    int userId;
+    int count;
+    struct Node *next;
+} Node;
+
 void notifyClientsAndShutdown()
 {
     Message disconnectMessage;
@@ -356,7 +363,7 @@ void deleteUserFromFile(int sock, int userId, int userIdToDelete)
     sendConfirmationMessage(sock, "User deleted from contact list");
 }
 
-void writeMessageToFile(int sock, int fromUserId, int toUserId, int recipientSocket, char *messageText)
+void processMessage(int sock, int fromUserId, int toUserId, int recipientSocket, char *messageText)
 {
     // Find the socket associated with the recipient user ID
 
@@ -389,11 +396,12 @@ void writeMessageToFile(int sock, int fromUserId, int toUserId, int recipientSoc
     sprintf(date, "%d-%02d-%02d %02d:%02d:%02d", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
 
     // Write the message to the sender's messages file
-    sprintf(filename, "TerChatApp/users/%d/messages", fromUserId);
+    sprintf(filename, "TerChatApp/users/%d/messages.txt", fromUserId);
     file = fopen(filename, "a");
     if (file != NULL)
     {
-        fprintf(file, "%s, %d, %s\n", date, toUserId, messageText);
+        int readStatus = 0;
+        fprintf(file, "%s, %d, %s, %d\n", date, toUserId, messageText, readStatus);
         fclose(file);
     }
     else
@@ -402,11 +410,12 @@ void writeMessageToFile(int sock, int fromUserId, int toUserId, int recipientSoc
     }
 
     // Write the message to the recipient's messages file
-    sprintf(filename, "TerChatApp/users/%d/messages", toUserId);
+    sprintf(filename, "TerChatApp/users/%d/messages.txt", toUserId);
     file = fopen(filename, "a");
     if (file != NULL)
     {
-        fprintf(file, "%s, %d, %s\n", date, fromUserId, messageText);
+        int readStatus = 0;
+        fprintf(file, "%s, %d, %s, %d\n", date, fromUserId, messageText, readStatus);
         fclose(file);
     }
     else
@@ -414,6 +423,56 @@ void writeMessageToFile(int sock, int fromUserId, int toUserId, int recipientSoc
         perror("Error opening recipient's messages file");
     }
     sendConfirmationMessage(sock, "Message sent");
+}
+
+void countUnreadMessagesAndSend(int sock, int userId)
+{
+    char filename[50];
+    sprintf(filename, "TerChatApp/users/%d/messages.txt", userId);
+
+    FILE *file = fopen(filename, "r");
+    if (file != NULL)
+    {
+        char line[256];
+        int unreadCounts[MAX_USERS] = {0}; // This will hold the counts of unread messages for each user
+
+        while (fgets(line, sizeof(line), file))
+        {
+            Message msg;
+
+            // Parse the line
+            sscanf(line, "%d, %[^,], %d, %d\n", &msg.type, msg.body, &msg.to, &msg.from);
+
+            // Check if the message is unread (type 8)
+            if (msg.type == 8)
+            {
+                unreadCounts[msg.from]++; // Increment the count for this user
+            }
+        }
+        fclose(file);
+
+        // Send the counts for each user to the client
+        for (int i = 0; i < MAX_USERS; i++)
+        {
+            if (unreadCounts[i] > 0)
+            {
+                Message msg;
+                msg.type = 8;
+                sprintf(msg.body, "%d Unread message from user %d\n", unreadCounts[i], i);
+                msg.to = userId;
+                msg.from = -1; // from server
+
+                if (send(sock, &msg, sizeof(msg), 0) == -1)
+                {
+                    perror("Error sending message");
+                }
+            }
+        }
+    }
+    else
+    {
+        perror("Error opening messages file");
+    }
 }
 
 void *handleClient(void *args)
@@ -465,7 +524,10 @@ void *handleClient(void *args)
         else if (receivedMessage.type == 7)
         {
             int recipientSocket = findSocketByUserId(receivedMessage.to, clients);
-            writeMessageToFile(newSocket, receivedMessage.from, receivedMessage.to, recipientSocket, receivedMessage.body);
+            processMessage(newSocket, receivedMessage.from, receivedMessage.to, recipientSocket, receivedMessage.body);
+        }
+        else if (receivedMessage.type == 8)
+        {
         }
         else
         {

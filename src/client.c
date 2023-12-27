@@ -243,6 +243,18 @@ void sendMessage(int sock, int userId)
     }
 }
 
+void checkMessage(int sock, int userId)
+{
+    Message msg;
+    msg.type = 8;      // Set the message type to 8 (check message)
+    msg.from = userId; // Set the from field to the current userId
+
+    if (send(sock, &msg, sizeof(msg), 0) == -1)
+    {
+        perror("Error sending check message");
+    }
+}
+
 void HandleMenu(int sock, int userId)
 {
     printf("<--------------------------->\n");
@@ -278,6 +290,7 @@ void HandleMenu(int sock, int userId)
         break;
     case 5:
         // Call function to check message
+        checkMessage(sock, userId);
         break;
     case 6:
         disconnect(sock, userId);
@@ -366,6 +379,11 @@ int main(int argc, char *argv[])
         else if (receivedMessage.type == 7)
         {
             printf("Message received from %d: %s\n", receivedMessage.from, receivedMessage.body);
+            HandleMenu(sock, userId);
+        }
+        else if (receivedMessage.type == 8)
+        {
+            printf("%s", receivedMessage.body);
             HandleMenu(sock, userId);
         }
         else
