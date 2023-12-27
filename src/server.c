@@ -132,12 +132,23 @@ void handleRegistrationRequest(int newSocket, Message receivedMessage)
     // Create a directory for the user
     char *dirPath = malloc((strlen("TerChatApp/users/") + sizeof(receivedMessage.from) + 1) * sizeof(char));
     sprintf(dirPath, "TerChatApp/users/%d", receivedMessage.from);
-    mkdir(dirPath, 0700);
+    if (mkdir(dirPath, 0777) == -1)
+    {
+        printf("Error creating directory\n");
+        return;
+    }
 
     // Create a file for the user's contact list
     char *filePath = malloc((strlen(dirPath) + strlen("/contact_list.txt") + 1) * sizeof(char));
     sprintf(filePath, "%s/contact_list.txt", dirPath);
     file = fopen(filePath, "w");
+    if (file == NULL)
+    {
+        perror("Error opening file");
+        free(dirPath);
+        free(filePath);
+        return;
+    }
     fclose(file);
     free(filePath);
 
@@ -145,6 +156,13 @@ void handleRegistrationRequest(int newSocket, Message receivedMessage)
     filePath = malloc((strlen(dirPath) + strlen("/messages.txt") + 1) * sizeof(char));
     sprintf(filePath, "%s/messages.txt", dirPath);
     file = fopen(filePath, "w");
+    if (file == NULL)
+    {
+        perror("Error opening file");
+        free(dirPath);
+        free(filePath);
+        return;
+    }
     fclose(file);
 
     free(filePath);
@@ -198,6 +216,7 @@ void *handleClient(void *args)
     }
 
     close(newSocket);
+    free(args);
     pthread_exit(NULL);
 }
 
@@ -265,7 +284,7 @@ int main()
         args->newSocket = newClient;
         // args->userMap = userMap;
 
-        int thread_create = pthread_create(&threads[threadCount], NULL, handleClient, (void *)&clients[threadCount]);
+        int thread_create = pthread_create(&threads[threadCount], NULL, handleClient, (void *)&args);
         if (thread_create < 0)
         {
             perror("thread create for client error");
