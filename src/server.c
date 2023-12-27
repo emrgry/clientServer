@@ -9,6 +9,7 @@
 
 #define PORT 8081
 #define MAX_USERS 10
+#define REGISTRATION_BUFFER_SIZE 16
 
 typedef struct // Struct to pass arguments to the thread
 {
@@ -31,6 +32,16 @@ typedef struct // Struct to represent a message
     int to;   // -1 for server, user_id for specific user
     int from; // -1 for server, user_id for specific user
 } Message;
+
+typedef struct
+{
+    /* data */
+    int userId;
+    char username[REGISTRATION_BUFFER_SIZE];
+    char phoneNumber[REGISTRATION_BUFFER_SIZE];
+    char name[REGISTRATION_BUFFER_SIZE];
+    char surname[REGISTRATION_BUFFER_SIZE];
+} User;
 
 void notifyClientsAndShutdown()
 {
@@ -177,6 +188,44 @@ void handleRegistrationRequest(int newSocket, Message receivedMessage)
     send(newSocket, &confirmationMessage, sizeof(confirmationMessage), 0);
 }
 
+void sendContactList(int sock)
+{
+    User users[MAX_USERS];
+    int userCount = 0;
+
+    FILE *file = fopen("TerChatApp/users/contact_list.txt", "r");
+    if (file == NULL)
+    {
+        perror("Error opening contact list");
+        return;
+    }
+
+    // Read the contact list into the users array
+    while (fscanf(file, "%d,%[^,],%[^,],%[^,],%[^\n]\n", &users[userCount].userId, users[userCount].name, users[userCount].surname) != EOF)
+    {
+        userCount++;
+        if (userCount >= MAX_USERS)
+        {
+            break;
+        }
+    }
+
+    fclose(file);
+
+    // Send the users array to the client
+    for (int i = 0; i < userCount; i++)
+    {
+        Message msg;
+        msg.type = 4;                               // Set the message type to 4
+        memcpy(&msg.body, &users[i], sizeof(User)); // Copy the user struct into the message body
+        if (send(sock, &msg, sizeof(Message), 0) == -1)
+        {
+            perror("Error sending user");
+            return;
+        }
+    }
+}
+
 void *handleClient(void *args)
 {
     ThreadArgs *threadArgs = (ThreadArgs *)args;
@@ -208,6 +257,10 @@ void *handleClient(void *args)
         else if (receivedMessage.type == 2)
         {
             handleRegistrationRequest(newSocket, receivedMessage);
+        }
+        else if (receivedMessage.type == 4)
+        {
+            sendContactList(newSocket);
         }
         else
         {

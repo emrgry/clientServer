@@ -6,18 +6,24 @@
 
 #define PORT 8081
 #define BUFFER_SIZE 1024
-#define REGISTRATION_BUFFER_SIZE 64
+#define REGISTRATION_BUFFER_SIZE 16
 #define MAX_USER_ID_LENGTH 3
+#define MAX_USERS 10
 
 typedef struct
 {
     /*
     message type / explanation
-        -1      /  disconnect
-        0       /  login request
-        1       /  regular message
-        2       /  registration request
-        3       /  confirmation message
+        -1       /  disconnect
+        0        /  login request
+        1        /  server message
+        2        /  registration request
+        3        /  confirmation message
+        4        /  list contacts
+        5        /  add user
+        6        /  delete user
+        7        /  send message
+        8        /  check message
     */
     int type; // -1 for disconnect, 0 for login request, 1 for regular message
     char body[1024];
@@ -116,6 +122,7 @@ void registerUser(int sock, int userId)
 
 int HandleMenu()
 {
+    printf("<--------------------------->\n");
     printf("Please type your choice:\n");
     printf("1 - List contacts\n");
     printf("2 - Add user\n");
@@ -129,6 +136,20 @@ int HandleMenu()
     getchar(); // To consume the newline character after the number
 
     return choice;
+}
+
+void listContacts(int sock, int userId)
+{
+    Message msg;
+    msg.type = 4; // Assuming 1 is the type for "list contacts" request
+    msg.from = userId;
+    msg.to = -1;
+    strcpy(msg.body, "List contacts request");
+
+    if (send(sock, &msg, sizeof(msg), 0) == -1)
+    {
+        perror("Error sending list contacts request");
+    }
 }
 
 int main(int argc, char *argv[])
@@ -196,6 +217,26 @@ int main(int argc, char *argv[])
             printf("confirmed");
             printf("Server: %s\n", receivedMessage.body);
         }
+        else if (receivedMessage.type == 4)
+        {
+            // list contacts
+            User *users = malloc(MAX_USERS * sizeof(User));
+            if (users == NULL)
+            {
+                perror("Error allocating memory for users");
+                return;
+            }
+
+            int userCount = sizeof(receivedMessage.body) / sizeof(User);
+            memcpy(users, &receivedMessage.body, sizeof(receivedMessage.body)); // Copy the user structs from the message body
+
+            for (int i = 0; i < userCount; i++)
+            {
+                printf("Received user: %d, %s, %s\n", users[i].userId, users[i].name, users[i].surname);
+            }
+
+            free(users);
+        }
         else
         {
             printf("Server %d: %s, message type %d\n", sock, receivedMessage.body, receivedMessage.type);
@@ -208,6 +249,7 @@ int main(int argc, char *argv[])
         {
         case 1:
             // Call function to list contacts
+            listContacts(sock, userId);
             break;
         case 2:
             // Call function to add user
@@ -220,6 +262,9 @@ int main(int argc, char *argv[])
             break;
         case 5:
             // Call function to check message
+            break;
+        case 6:
+            disconnect(sock, userId);
             break;
         default:
             printf("Invalid choice. Please try again.\n");
