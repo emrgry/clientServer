@@ -261,7 +261,7 @@ int main(int argc, char *argv[])
             if (users == NULL)
             {
                 perror("Error allocating memory for users");
-                return;
+                return 0;
             }
 
             int userCount = sizeof(receivedMessage.body) / sizeof(User);

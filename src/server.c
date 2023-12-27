@@ -201,7 +201,7 @@ void sendContactList(int sock)
     }
 
     // Read the contact list into the users array
-    while (fscanf(file, "%d,%[^,],%[^,],%[^,],%[^\n]\n", &users[userCount].userId, users[userCount].name, users[userCount].surname) != EOF)
+    while (fscanf(file, "%d,%[^,],%[^\n]\n", &users[userCount].userId, users[userCount].name, users[userCount].surname) != EOF)
     {
         userCount++;
         if (userCount >= MAX_USERS)
