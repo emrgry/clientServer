@@ -120,7 +120,7 @@ void registerUser(int sock, int userId)
     free(surname);
 }
 
-int HandleMenu()
+int HandleMenu(int sock, int userId)
 {
     printf("<--------------------------->\n");
     printf("Please type your choice:\n");
@@ -135,7 +135,33 @@ int HandleMenu()
     scanf("%d", &choice);
     getchar(); // To consume the newline character after the number
 
-    return choice;
+    switch (choice)
+    {
+    case 1:
+        // Call function to list contacts
+        listContacts(sock, userId);
+        break;
+    case 2:
+        // Call function to add user
+        addUser(sock, userId, CreateUser());
+        break;
+    case 3:
+        // Call function to delete user
+        break;
+    case 4:
+        // Call function to send message
+        break;
+    case 5:
+        // Call function to check message
+        break;
+    case 6:
+        disconnect(sock, userId);
+        break;
+    default:
+        printf("Invalid choice. Please try again.\n");
+        return;
+    }
+    return;
 }
 
 void listContacts(int sock, int userId)
@@ -253,8 +279,8 @@ int main(int argc, char *argv[])
         else if (receivedMessage.type == 3)
         {
             // confirmation message
-            printf("confirmed");
-            printf("Server: %s\n", receivedMessage.body);
+            printf("Server notification! %s\n", receivedMessage.body);
+            HandleMenu(sock, userId);
         }
         else if (receivedMessage.type == 4)
         {
@@ -284,33 +310,7 @@ int main(int argc, char *argv[])
 
         // Clear the buffer
         memset(buffer, 0, sizeof(buffer));
-
-        switch (HandleMenu())
-        {
-        case 1:
-            // Call function to list contacts
-            listContacts(sock, userId);
-            break;
-        case 2:
-            // Call function to add user
-            addUser(sock, userId, CreateUser());
-            break;
-        case 3:
-            // Call function to delete user
-            break;
-        case 4:
-            // Call function to send message
-            break;
-        case 5:
-            // Call function to check message
-            break;
-        case 6:
-            disconnect(sock, userId);
-            break;
-        default:
-            printf("Invalid choice. Please try again.\n");
-            continue;
-        }
+        HandleMenu(sock, userId);
     }
 
     return 0;
