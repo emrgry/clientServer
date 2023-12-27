@@ -188,12 +188,14 @@ void handleRegistrationRequest(int newSocket, Message receivedMessage)
     send(newSocket, &confirmationMessage, sizeof(confirmationMessage), 0);
 }
 
-void sendContactList(int sock)
+void sendContactList(int sock, int userId)
 {
     User users[MAX_USERS];
     int userCount = 0;
 
-    FILE *file = fopen("TerChatApp/users/contact_list.txt", "r");
+    char filePath[100];
+    sprintf(filePath, "TerChatApp/users/%d/contact_list.txt", userId);
+    FILE *file = fopen(filePath, "r");
     if (file == NULL)
     {
         perror("Error opening contact list");
@@ -260,7 +262,7 @@ void *handleClient(void *args)
         }
         else if (receivedMessage.type == 4)
         {
-            sendContactList(newSocket);
+            sendContactList(newSocket, receivedMessage.from);
         }
         else
         {
