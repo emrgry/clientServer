@@ -282,7 +282,7 @@ void deleteUserFromFile(int sock, int userId, int userIdToDelete)
 {
     FILE *file;
     char filename[50];
-    sprintf(filename, "TerChatApp/users/%d/contact_list.txt", userIdToDelete);
+    sprintf(filename, "TerChatApp/users/%d/contact_list.txt", userId);
 
     // Open the file in read mode
     file = fopen(filename, "r");
