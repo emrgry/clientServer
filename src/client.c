@@ -120,50 +120,6 @@ void registerUser(int sock, int userId)
     free(surname);
 }
 
-int HandleMenu(int sock, int userId)
-{
-    printf("<--------------------------->\n");
-    printf("Please type your choice:\n");
-    printf("1 - List contacts\n");
-    printf("2 - Add user\n");
-    printf("3 - Delete user\n");
-    printf("4 - Send message\n");
-    printf("5 - Check message\n");
-    printf("6 - Disconnect\n");
-
-    int choice;
-    scanf("%d", &choice);
-    getchar(); // To consume the newline character after the number
-
-    switch (choice)
-    {
-    case 1:
-        // Call function to list contacts
-        listContacts(sock, userId);
-        break;
-    case 2:
-        // Call function to add user
-        addUser(sock, userId, CreateUser());
-        break;
-    case 3:
-        // Call function to delete user
-        break;
-    case 4:
-        // Call function to send message
-        break;
-    case 5:
-        // Call function to check message
-        break;
-    case 6:
-        disconnect(sock, userId);
-        break;
-    default:
-        printf("Invalid choice. Please try again.\n");
-        return;
-    }
-    return;
-}
-
 void listContacts(int sock, int userId)
 {
     Message msg;
@@ -214,6 +170,50 @@ void addUser(int sock, int userId, User user)
     {
         perror("Error sending user");
     }
+}
+
+int HandleMenu(int sock, int userId)
+{
+    printf("<--------------------------->\n");
+    printf("Please type your choice:\n");
+    printf("1 - List contacts\n");
+    printf("2 - Add user\n");
+    printf("3 - Delete user\n");
+    printf("4 - Send message\n");
+    printf("5 - Check message\n");
+    printf("6 - Disconnect\n");
+
+    int choice;
+    scanf("%d", &choice);
+    getchar(); // To consume the newline character after the number
+
+    switch (choice)
+    {
+    case 1:
+        // Call function to list contacts
+        listContacts(sock, userId);
+        break;
+    case 2:
+        // Call function to add user
+        addUser(sock, userId, CreateUser());
+        break;
+    case 3:
+        // Call function to delete user
+        break;
+    case 4:
+        // Call function to send message
+        break;
+    case 5:
+        // Call function to check message
+        break;
+    case 6:
+        disconnect(sock, userId);
+        break;
+    default:
+        printf("Invalid choice. Please try again.\n");
+        return;
+    }
+    return;
 }
 
 int main(int argc, char *argv[])
