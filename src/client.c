@@ -238,7 +238,8 @@ int main(int argc, char *argv[])
 
         // Receive message from server
         Message receivedMessage;
-        int valrec = recv(sock, &receivedMessage, BUFFER_SIZE, 0);
+        // int valrec = recv(sock, &receivedMessage, BUFFER_SIZE, 0);
+        int valrec = recv(sock, &receivedMessage, sizeof(Message), 0);
         if (valrec <= 0 || receivedMessage.type == -1) // disconnect request or connection closed
         {
             printf("Disconnect request received from server or connection closed\n");
@@ -266,8 +267,8 @@ int main(int argc, char *argv[])
             }
 
             int userCount = sizeof(receivedMessage.body) / sizeof(User);
-            memcpy(users, &receivedMessage.body, sizeof(receivedMessage.body)); // Copy the user structs from the message body
-
+            // memcpy(users, &receivedMessage.body, sizeof(receivedMessage.body)); // Copy the user structs from the message body
+            memcpy(users, &receivedMessage.body, userCount * sizeof(User));
             for (int i = 0; i < userCount; i++)
             {
                 printf("Received user: %d, %s, %s\n", users[i].userId, users[i].name, users[i].surname);
