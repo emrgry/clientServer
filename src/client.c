@@ -172,6 +172,29 @@ void addUser(int sock, int userId, User user)
     }
 }
 
+// list contacts
+void processUserList(Message receivedMessage, int sock, int userId)
+{
+    User *users = malloc(MAX_USERS * sizeof(User));
+    if (users == NULL)
+    {
+        perror("Error allocating memory for users");
+        return;
+    }
+
+    int userCount = receivedMessage.to; // sizeof(receivedMessage.body) / sizeof(User);
+    // memcpy(users, &receivedMessage.body, sizeof(receivedMessage.body)); // Copy the user structs from the message body
+    memcpy(users, &receivedMessage.body, userCount * sizeof(User));
+    printf("User ID, Name, Surname, Phone Number\n");
+    for (int i = 0; i < userCount; i++)
+    {
+        printf("%d, %s, %s, %s\n", users[i].userId, users[i].name, users[i].surname, users[i].phoneNumber);
+    }
+
+    free(users);
+    HandleMenu(sock, userId);
+}
+
 void HandleMenu(int sock, int userId)
 {
     printf("<--------------------------->\n");
@@ -279,29 +302,14 @@ int main(int argc, char *argv[])
         else if (receivedMessage.type == 3)
         {
             // confirmation message
+            printf("<--------------------------->\n");
             printf("Server notification! %s\n", receivedMessage.body);
             HandleMenu(sock, userId);
         }
         else if (receivedMessage.type == 4)
         {
             // list contacts
-            User *users = malloc(MAX_USERS * sizeof(User));
-            if (users == NULL)
-            {
-                perror("Error allocating memory for users");
-                return 0;
-            }
-
-            int userCount = receivedMessage.to; // sizeof(receivedMessage.body) / sizeof(User);
-            // memcpy(users, &receivedMessage.body, sizeof(receivedMessage.body)); // Copy the user structs from the message body
-            memcpy(users, &receivedMessage.body, userCount * sizeof(User));
-            printf("User ID, Name, Surname, Phone Number\n");
-            for (int i = 0; i < userCount; i++)
-            {
-                printf("%d, %s, %s, %s\n", users[i].userId, users[i].name, users[i].surname, users[i].phoneNumber);
-            }
-
-            free(users);
+            processUserList(receivedMessage, sock, userId);
         }
         else
         {
