@@ -278,6 +278,68 @@ void addUserToContactList(int sock, int userId, User user)
     sendConfirmationMessage(sock, "User added to contact list");
 }
 
+void deleteUserFromFile(int sock, int userId, int userIdToDelete)
+{
+    FILE *file;
+    char filename[50];
+    sprintf(filename, "TerChatApp/users/%d/contact_list.txt", userIdToDelete);
+
+    // Open the file in read mode
+    file = fopen(filename, "r");
+    if (file == NULL)
+    {
+        perror("Error opening file");
+        return;
+    }
+
+    // Read all the lines into a dynamic array
+    char **lines = NULL;
+    size_t len = 0;
+    ssize_t read;
+    int lineCount = 0;
+    while ((read = getline(&lines[lineCount], &len, file)) != -1)
+    {
+        lineCount++;
+        lines = realloc(lines, (lineCount + 1) * sizeof(char *));
+        if (lines == NULL)
+        {
+            perror("Error reallocating memory");
+            return;
+        }
+        lines[lineCount] = NULL;
+    }
+
+    // Close the file
+    fclose(file);
+
+    // Open the file again in write mode
+    file = fopen(filename, "w");
+    if (file == NULL)
+    {
+        perror("Error opening file");
+        return;
+    }
+
+    // Write all the lines back to the file, except for the line that contains the user ID to be deleted
+    for (int i = 0; i < lineCount; i++)
+    {
+        int userId;
+        sscanf(lines[i], "%d", &userId);
+        if (userId != userIdToDelete)
+        {
+            fprintf(file, "%s", lines[i]);
+        }
+        free(lines[i]);
+    }
+
+    // Close the file
+    fclose(file);
+
+    // Free the dynamic array
+    free(lines);
+    sendConfirmationMessage(sock, "User deleted from contact list");
+}
+
 void *handleClient(void *args)
 {
     ThreadArgs *threadArgs = (ThreadArgs *)args;
@@ -319,6 +381,10 @@ void *handleClient(void *args)
             User userToAdd;
             memcpy(&userToAdd, receivedMessage.body, sizeof(User));
             addUserToContactList(newSocket, receivedMessage.from, userToAdd);
+        }
+        else if (receivedMessage.type == 6)
+        {
+            deleteUserFromFile(newSocket, receivedMessage.from, receivedMessage.to);
         }
         else
         {

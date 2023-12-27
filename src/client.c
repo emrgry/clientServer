@@ -185,6 +185,7 @@ void processUserList(Message receivedMessage, int sock, int userId)
     int userCount = receivedMessage.to; // sizeof(receivedMessage.body) / sizeof(User);
     // memcpy(users, &receivedMessage.body, sizeof(receivedMessage.body)); // Copy the user structs from the message body
     memcpy(users, &receivedMessage.body, userCount * sizeof(User));
+    printf("<--------------------------->\n");
     printf("User ID, Name, Surname, Phone Number\n");
     for (int i = 0; i < userCount; i++)
     {
@@ -192,6 +193,23 @@ void processUserList(Message receivedMessage, int sock, int userId)
     }
 
     free(users);
+}
+
+void deleteUser(int sock, int userId)
+{
+    int deleteUserId;
+    printf("Enter the ID of the user to be deleted: ");
+    scanf("%d", &deleteUserId);
+
+    Message msg;
+    msg.type = 6;          // Set the message type to 6 (delete user)
+    msg.from = userId;     // Set the from field to the current userId
+    msg.to = deleteUserId; // Set the to field to the userId of the user to be deleted
+
+    if (send(sock, &msg, sizeof(msg), 0) == -1)
+    {
+        perror("Error sending delete user request");
+    }
 }
 
 void HandleMenu(int sock, int userId)
@@ -208,7 +226,7 @@ void HandleMenu(int sock, int userId)
     int choice;
     scanf("%d", &choice);
     getchar(); // To consume the newline character after the number
-
+    printf("<--------------------------->\n");
     switch (choice)
     {
     case 1:
@@ -221,6 +239,7 @@ void HandleMenu(int sock, int userId)
         break;
     case 3:
         // Call function to delete user
+        deleteUser(sock, userId);
         break;
     case 4:
         // Call function to send message
@@ -301,8 +320,9 @@ int main(int argc, char *argv[])
         else if (receivedMessage.type == 3)
         {
             // confirmation message
-            printf("<--------------------------->\n");
+            printf("<!!!!!!!!!!!!!!!!!!!!!!!!!!!>\n");
             printf("Server notification! %s\n", receivedMessage.body);
+            printf("<!!!!!!!!!!!!!!!!!!!!!!!!!!!>\n");
             HandleMenu(sock, userId);
         }
         else if (receivedMessage.type == 4)
