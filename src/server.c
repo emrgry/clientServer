@@ -270,7 +270,7 @@ int main()
 
     while (1)
     {
-        int newClient = accept(serverSock, (struct sockaddr *)&servAddr, (socklen_t *)addrlen);
+        int newClient = accept(serverSock, (struct sockaddr *)&servAddr, (socklen_t *)&addrlen);
         if (newClient < 0)
         {
             perror("Error! When server accepting new client");
@@ -284,7 +284,7 @@ int main()
         args->newSocket = newClient;
         // args->userMap = userMap;
 
-        int thread_create = pthread_create(&threads[threadCount], NULL, handleClient, (void *)&args);
+        int thread_create = pthread_create(&threads[threadCount], NULL, handleClient, (void *)args);
         if (thread_create < 0)
         {
             perror("thread create for client error");
