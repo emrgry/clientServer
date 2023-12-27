@@ -228,6 +228,22 @@ void sendContactList(int sock, int userId)
     }
 }
 
+void addUserToContactList(int sock, int userId, User user)
+{
+    char filePath[100];
+    sprintf(filePath, "TerChatApp/users/%d/contact_list.txt", userId);
+    FILE *file = fopen(filePath, "a");
+    if (file == NULL)
+    {
+        perror("Error opening contact list");
+        return;
+    }
+
+    fprintf(file, "%d,%s,%s\n", user.userId, user.name, user.surname);
+
+    fclose(file);
+}
+
 void *handleClient(void *args)
 {
     ThreadArgs *threadArgs = (ThreadArgs *)args;
@@ -263,6 +279,12 @@ void *handleClient(void *args)
         else if (receivedMessage.type == 4)
         {
             sendContactList(newSocket, receivedMessage.from);
+        }
+        else if (receivedMessage.type == 5)
+        {
+            User userToAdd;
+            memcpy(&userToAdd, receivedMessage.body, sizeof(User));
+            addUserToContactList(newSocket, receivedMessage.from, userToAdd);
         }
         else
         {
