@@ -528,6 +528,7 @@ void *handleClient(void *args)
         }
         else if (receivedMessage.type == 8)
         {
+            countUnreadMessagesAndSend(newSocket, receivedMessage.from);
         }
         else
         {
