@@ -462,7 +462,7 @@ void countUnreadMessagesAndSend(int sock, int userId)
                 sprintf(msg.body, "%d Unread message from user %d\n", unreadCounts[i], i);
                 msg.to = userId;
                 msg.from = -1; // from server
-
+                printf("Sending message to client %d: %s\n", sock, msg.body);
                 if (send(sock, &msg, sizeof(msg), 0) == -1)
                 {
                     perror("Error sending message");
