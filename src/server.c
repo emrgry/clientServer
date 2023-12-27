@@ -220,7 +220,7 @@ void sendContactList(int sock, int userId)
         Message msg;
         msg.type = 4; // Set the message type to 4
         msg.from = -1;
-        msg.to = userId;
+        msg.to = userCount;                         // Set the message to to the number of users
         memcpy(&msg.body, &users[i], sizeof(User)); // Copy the user struct into the message body
         if (send(sock, &msg, sizeof(msg), 0) == -1)
         {

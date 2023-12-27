@@ -266,7 +266,7 @@ int main(int argc, char *argv[])
                 return 0;
             }
 
-            int userCount = sizeof(receivedMessage.body) / sizeof(User);
+            int userCount = receivedMessage.to; // sizeof(receivedMessage.body) / sizeof(User);
             // memcpy(users, &receivedMessage.body, sizeof(receivedMessage.body)); // Copy the user structs from the message body
             memcpy(users, &receivedMessage.body, userCount * sizeof(User));
             for (int i = 0; i < userCount; i++)
