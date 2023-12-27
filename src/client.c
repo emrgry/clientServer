@@ -184,7 +184,7 @@ void addUser(int sock, int userId, User user)
     msg.from = userId;                      // Set the message type to 5 (add user)
     memcpy(&msg.body, &user, sizeof(User)); // Copy the user struct into the message body
 
-    if (send(sock, &msg, sizeof(Message), 0) == -1)
+    if (send(sock, &msg, sizeof(msg), 0) == -1)
     {
         perror("Error sending user");
     }

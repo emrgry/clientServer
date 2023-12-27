@@ -56,6 +56,14 @@ void notifyClientsAndShutdown()
     close(0);
 }
 
+void sendConfirmationMessage(int newSocket, const char *message)
+{
+    Message confirmationMessage;
+    confirmationMessage.type = 3; // Assuming 3 is the type for a registration confirmation
+    strcpy(confirmationMessage.body, message);
+    send(newSocket, &confirmationMessage, sizeof(confirmationMessage), 0);
+}
+
 void disconnectClient(int newSocket)
 {
     // int userId = userMap[newSocket];
@@ -97,10 +105,7 @@ void handleLoginRequest(int newSocket, Message receivedMessage)
         printf("User is registered\n");
         // Continue with login process
         // userMap[newSocket] = receivedMessage.from;
-        Message confirmationMessage;
-        confirmationMessage.type = 3; // Assuming 3 is the type for a registration confirmation
-        strcpy(confirmationMessage.body, "loggedin");
-        send(newSocket, &confirmationMessage, sizeof(confirmationMessage), 0);
+        sendConfirmationMessage(newSocket, "logged in");
     }
     else
     {
@@ -180,12 +185,7 @@ void handleRegistrationRequest(int newSocket, Message receivedMessage)
     free(dirPath);
 
     // Send a confirmation message back to the client
-    Message confirmationMessage;
-    confirmationMessage.from = -1; // -1 indicates a message from the server
-    confirmationMessage.to = receivedMessage.from;
-    confirmationMessage.type = 3; // Assuming 3 is the type for a registration confirmation
-    strcpy(confirmationMessage.body, "registered");
-    send(newSocket, &confirmationMessage, sizeof(confirmationMessage), 0);
+    sendConfirmationMessage(newSocket, "registered");
 }
 
 void sendContactList(int sock, int userId)
@@ -243,10 +243,10 @@ void addUserToContactList(int sock, int userId, User user)
         return;
     }
 
-    User existingUser;
-    while (fscanf(file, "%d,%[^,],%[^,],%[^\n]\n", &existingUser.userId, existingUser.name, existingUser.surname, existingUser.phoneNumber) != EOF)
+    int existingUserId;
+    while (fscanf(file, "%d,%*[^\n]\n", &existingUserId) != EOF)
     {
-        if (existingUser.userId == user.userId)
+        if (existingUserId == user.userId)
         {
             printf("User already exists in contact list\n");
             fclose(file);
@@ -266,6 +266,7 @@ void addUserToContactList(int sock, int userId, User user)
     fprintf(file, "%d,%s,%s,%s\n", user.userId, user.name, user.surname, user.phoneNumber);
 
     fclose(file);
+    sendConfirmationMessage(sock, "User added to contact list");
 }
 
 void *handleClient(void *args)
