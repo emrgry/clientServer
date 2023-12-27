@@ -222,7 +222,7 @@ void sendContactList(int sock, int userId)
         msg.from = -1;
         msg.to = userId;
         memcpy(&msg.body, &users[i], sizeof(User)); // Copy the user struct into the message body
-        if (send(sock, &msg, sizeof(Message), 0) == -1)
+        if (send(sock, &msg, sizeof(msg), 0) == -1)
         {
             perror("Error sending user");
             return;
