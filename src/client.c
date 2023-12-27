@@ -310,7 +310,6 @@ int main(int argc, char *argv[])
 
         // Clear the buffer
         memset(buffer, 0, sizeof(buffer));
-        HandleMenu(sock, userId);
     }
 
     return 0;
