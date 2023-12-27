@@ -110,9 +110,10 @@ int isUserRegistered(int userId)
     return 0; // User is not registered
 }
 
-void handleLoginRequest(int newSocket, Message receivedMessage)
+void handleLoginRequest(int newSocket, Message receivedMessage, int *clients)
 {
     printf("Login request received from client: %d userId: %d\n", newSocket, receivedMessage.from);
+    clients[receivedMessage.from] = newSocket;
     if (isUserRegistered(receivedMessage.from))
     {
         printf("User is registered\n");
@@ -434,7 +435,7 @@ void *handleClient(void *args)
         }
         else if (receivedMessage.type == 0) // login request
         {
-            handleLoginRequest(newSocket, receivedMessage);
+            handleLoginRequest(newSocket, receivedMessage, clients);
         }
 
         else if (receivedMessage.type == 1)
@@ -477,18 +478,11 @@ void *handleClient(void *args)
 
 int main()
 {
-    // I got error so I disable disconnect feature
-    // int userMap[MAX_USERS]; // Array to map socket numbers to user IDs
-    // int *userMap = malloc(MAX_USERS * sizeof(int));
-    // if (userMap == NULL)
-    // {
-    //     fprintf(stderr, "Failed to allocate memory for userMap\n");
-    //     exit(1);
-    // }
     mkdir("TerChatApp", 0777);       // Create the TerChatApp directory if it does not exist
     mkdir("TerChatApp/users", 0777); // Create the users directory if it does not exist
 
     int clients[MAX_USERS] = {0};
+    int sockets[MAX_USERS] = {0};
     pthread_t threads[MAX_USERS];
     int threadCount = 0;
 
@@ -537,7 +531,7 @@ int main()
         clients[threadCount] = newClient;
         ThreadArgs *args = malloc(sizeof(ThreadArgs));
         args->newSocket = newClient;
-        args->clients = clients;
+        args->clients = sockets;
 
         int thread_create = pthread_create(&threads[threadCount], NULL, handleClient, (void *)args);
         if (thread_create < 0)
