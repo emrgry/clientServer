@@ -273,6 +273,7 @@ void HandleMenu(int sock, int userId)
         break;
     case 4:
         // Call function to send message
+        sendMessage(sock, userId);
         break;
     case 5:
         // Call function to check message
