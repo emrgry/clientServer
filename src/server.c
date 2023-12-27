@@ -439,15 +439,18 @@ void countUnreadMessagesAndSend(int sock, int userId)
 
         while (fgets(line, sizeof(line), file))
         {
-            Message msg;
+            char date[50];
+            int fromUserId;
+            char messageText[1024];
+            int readStatus;
 
             // Parse the line
-            sscanf(line, "%d, %[^,], %d, %d\n", &msg.type, msg.body, &msg.to, &msg.from);
+            sscanf(line, "%[^,], %d, %[^,], %d\n", date, &fromUserId, messageText, &readStatus);
 
-            // Check if the message is unread (type 8)
-            if (msg.type == 8)
+            // Check if the message is unread
+            if (readStatus == 0)
             {
-                unreadCounts[msg.from]++; // Increment the count for this user
+                unreadCounts[fromUserId]++; // Increment the count for this user
             }
         }
         fclose(file);
@@ -457,13 +460,10 @@ void countUnreadMessagesAndSend(int sock, int userId)
         {
             if (unreadCounts[i] > 0)
             {
-                Message msg;
-                msg.type = 8;
-                sprintf(msg.body, "%d Unread message from user %d\n", unreadCounts[i], i);
-                msg.to = userId;
-                msg.from = -1; // from server
-                printf("Sending message to client %d: %s\n", sock, msg.body);
-                if (send(sock, &msg, sizeof(msg), 0) == -1)
+                char msg[1024];
+                sprintf(msg, "%d Unread message from user %d\n", unreadCounts[i], i);
+                printf("Sending message to client %d: %s\n", sock, msg);
+                if (send(sock, msg, strlen(msg), 0) == -1)
                 {
                     perror("Error sending message");
                 }
