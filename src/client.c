@@ -470,10 +470,10 @@ void *handleUserInput(void *arg)
 
     while (1)
     {
-        // if (stopMenu == 1)
-        // {
-        //     continue;
-        // }
+        if (stopMenu == 0)
+        {
+            continue;
+        }
         HandleMenu(sock, userId);
     }
 
@@ -543,6 +543,7 @@ int main(int argc, char *argv[])
         else if (receivedMessage.type == 2) // registration request
         {
             registerUser(sock, userId);
+            showMenu = 0;
         }
         else if (receivedMessage.type == 3) // confirmation message
         {
