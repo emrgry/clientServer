@@ -377,38 +377,13 @@ void requestReadMessages(int sock, int userId)
 
 // <----------------------------------------------------------------> //
 /**
- * @brief Checks if the user has any new messages.
- *
- * @param sock The socket file descriptor for the client-server connection.
- * @param userId The ID of the user.
- */
-// <----------------------------------------------------------------> //
-void *checkMessageType(void *arg)
-{
-    int sock = ((struct args *)arg)->sock;
-    int userId = ((struct args *)arg)->userId;
-
-    Message receivedMessage;
-    int valrec = recv(sock, &receivedMessage, sizeof(Message), 0);
-
-    if (receivedMessage.type == 9)
-    {
-        printf("Messages from %d:\n", receivedMessage.from);
-        printf("%s", receivedMessage.body);
-    }
-
-    return NULL;
-}
-
-// <----------------------------------------------------------------> //
-/**
  * @brief Handles the menu for the user.
  *
  * @param sock The socket file descriptor for the client-server connection.
  * @param userId The ID of the user.
  */
 // <----------------------------------------------------------------> //
-void HandleMenu(int sock, int userId)
+void HandleMenu(int sock, int userId, int *showMenu)
 {
     printf("<--------------------------->\n");
     printf("Please type your choice:\n");
@@ -423,6 +398,7 @@ void HandleMenu(int sock, int userId)
     scanf("%d", &choice);
     getchar(); // To consume the newline character after the number
     printf("<--------------------------->\n");
+    *showMenu = 0;
     switch (choice)
     {
     case 1:
@@ -474,7 +450,7 @@ void *handleUserInput(void *arg)
         {
             continue;
         }
-        HandleMenu(sock, userId);
+        HandleMenu(sock, userId, *showMenu);
     }
 
     return NULL;
