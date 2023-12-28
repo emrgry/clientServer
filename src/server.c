@@ -457,15 +457,22 @@ void countUnreadMessagesAndSend(int sock, int userId)
 
         // Send the counts for each user to the client
         char msgBody[1024] = ""; // This will hold the entire message body
-
+        int findedUnread = 0;
         for (int i = 0; i < MAX_USERS; i++)
         {
             if (unreadCounts[i] > 0)
             {
+                findedUnread = 1;
                 char temp[128];
                 sprintf(temp, "%d Unread message from user %d\n", unreadCounts[i], i);
                 strcat(msgBody, temp); // Append the count for this user to the message body
             }
+        }
+
+        if (findedUnread == 0)
+        {
+            sendConfirmationMessage(sock, "No unread message");
+            return;
         }
 
         Message msg;
