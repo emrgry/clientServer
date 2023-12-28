@@ -474,12 +474,97 @@ void countUnreadMessagesAndSend(int sock, int userId)
         msg.to = userId;
         msg.from = -1; // from server
 
-        printf("Sending message to client %d: %s\n", sock, msg.body);
+        // printf("Sending message to client %d: %s\n", sock, msg.body);
         if (send(sock, &msg, sizeof(msg), 0) == -1)
         {
             perror("Error sending message");
         }
-        sendConfirmationMessage(sock, "Unread message count sent");
+    }
+    else
+    {
+        perror("Error opening messages file");
+    }
+}
+
+void readUserMessagesAndSetReadStatus(int sock, int userId)
+{
+    char filename[50];
+    sprintf(filename, "TerChatApp/users/%d/messages.txt", userId);
+
+    FILE *file = fopen(filename, "r");
+    if (file != NULL)
+    {
+        char line[256];
+        int messageCount = 0;
+
+        // Define a struct to hold the message data
+        typedef struct
+        {
+            char *date;
+            int fromUserId;
+            char *messageText;
+            int readStatus;
+        } MessageData;
+
+        MessageData *messages = NULL; // This will hold all the messages
+
+        while (fgets(line, sizeof(line), file))
+        {
+            char date[50];
+            int fromUserId;
+            char messageText[1024];
+            int readStatus;
+
+            // Parse the line
+            sscanf(line, "%[^,], %d, %[^,], %d\n", date, &fromUserId, messageText, &readStatus);
+
+            // Reallocate memory for the messages
+            messages = realloc(messages, (messageCount + 1) * sizeof(MessageData));
+            if (messages == NULL)
+            {
+                perror("Error reallocating memory for messages");
+                return;
+            }
+
+            // Store the message
+            messages[messageCount].date = strdup(date);
+            messages[messageCount].fromUserId = fromUserId;
+            messages[messageCount].messageText = strdup(messageText);
+            messages[messageCount].readStatus = 1; // Set the status to read
+            messageCount++;
+        }
+        fclose(file);
+
+        // Rewrite the messages with the updated read status
+        file = fopen(filename, "w");
+        if (file != NULL)
+        {
+            // Send the messages to the client
+            for (int i = 0; i < messageCount; i++)
+            {
+                Message msg;
+                msg.type = 9; // type 9 for read message
+                sprintf(msg.body, "%s, %d, %s, %d\n", messages[i].date, messages[i].fromUserId, messages[i].messageText, messages[i].readStatus);
+                msg.to = userId;                   // to server
+                msg.from = messages[i].fromUserId; // from server
+
+                if (send(sock, &msg, sizeof(msg), 0) == -1)
+                {
+                    perror("Error sending message");
+                }
+
+                free(messages[i].date);
+                free(messages[i].messageText);
+            }
+            fclose(file);
+        }
+        else
+        {
+            perror("Error opening messages file for writing");
+        }
+
+        // Free the memory allocated for the messages
+        free(messages);
     }
     else
     {
@@ -541,6 +626,10 @@ void *handleClient(void *args)
         else if (receivedMessage.type == 8)
         {
             countUnreadMessagesAndSend(newSocket, receivedMessage.from);
+        }
+        else if (receivedMessage.type == 9)
+        {
+            readUserMessagesAndSetReadStatus(newSocket, receivedMessage.from);
         }
         else
         {

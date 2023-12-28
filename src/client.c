@@ -24,6 +24,7 @@ typedef struct
         6        /  delete user
         7        /  send message
         8        /  check message
+        9        /  read messages
     */
     int type; // -1 for disconnect, 0 for login request, 1 for regular message
     char body[1024];
@@ -255,6 +256,24 @@ void checkMessage(int sock, int userId)
     }
 }
 
+void requestReadMessages(int sock, int userId)
+{
+    int targetUserId;
+    printf("Enter the user ID of the user whose messages you want to read: ");
+    scanf("%d", &targetUserId);
+
+    // Now you can send a request to the server to get the messages from targetUserId
+    Message request;
+    request.type = 9;          // type 9 for read messages request
+    request.to = targetUserId; // to server
+    request.from = userId;
+
+    if (send(sock, &request, sizeof(request), 0) == -1)
+    {
+        perror("Error sending message");
+    }
+}
+
 void HandleMenu(int sock, int userId)
 {
     printf("<--------------------------->\n");
@@ -384,7 +403,13 @@ int main(int argc, char *argv[])
         else if (receivedMessage.type == 8)
         {
             printf("%s", receivedMessage.body);
-            // HandleMenu(sock, userId);
+            requestReadMessages(sock, userId);
+        }
+        else if (receivedMessage.type == 9)
+        {
+            printf("Messages from %d:\n", receivedMessage.from);
+            printf("%s", receivedMessage.body);
+            HandleMenu(sock, userId);
         }
         else
         {
