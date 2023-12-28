@@ -51,6 +51,15 @@ struct args
     int showMenu;
 };
 
+// <----------------------------------------------------------------> //
+/**
+ * @brief Validates the given user ID string.
+ *
+ * @param userIdStr The user ID string to be validated.
+ * @return The validated user ID as an integer.
+ */
+// <----------------------------------------------------------------> //
+
 int validateUserId(char *userIdStr)
 {
     char *endChar;
@@ -69,7 +78,14 @@ int validateUserId(char *userIdStr)
     return userId;
 }
 
+// <----------------------------------------------------------------> //
 // Send a disconnect message to the server
+/**
+ * @brief Disconnects the client from the server.
+ * @param sock The socket descriptor of the client.
+ * @param user_id The ID of the client.
+ */
+// <----------------------------------------------------------------> //
 void disconnect(int sock, int user_id)
 {
     Message disconnectMessage;
@@ -79,6 +95,12 @@ void disconnect(int sock, int user_id)
     printf("Disconnect request sent to server\n");
 }
 
+// <----------------------------------------------------------------> //
+/**
+ * @brief Removes the newline character from a string.
+ * @param string The string to remove the newline character from.
+ */
+// <----------------------------------------------------------------> //
 void removeNewline(char *string)
 {
     int length = strlen(string);
@@ -88,15 +110,26 @@ void removeNewline(char *string)
     }
 }
 
+// <----------------------------------------------------------------> //
+/**
+ * @brief Registers a user by collecting their information and sending it to the server.
+ *
+ * @param sock The socket file descriptor for the client-server connection.
+ * @param userId The ID of the user.
+ */
+// <----------------------------------------------------------------> //
 void registerUser(int sock, int userId)
 {
+    // Prompt the user to register
     printf("Please register for using this app\n");
 
+    // Allocate memory for user information
     char *username = malloc(REGISTRATION_BUFFER_SIZE * sizeof(char));
     char *phoneNumber = malloc(REGISTRATION_BUFFER_SIZE * sizeof(char));
     char *name = malloc(REGISTRATION_BUFFER_SIZE * sizeof(char));
     char *surname = malloc(REGISTRATION_BUFFER_SIZE * sizeof(char));
 
+    // Collect user information from the user
     printf("Enter your username: ");
     fgets(username, REGISTRATION_BUFFER_SIZE, stdin);
     removeNewline(username);
@@ -130,6 +163,14 @@ void registerUser(int sock, int userId)
     free(surname);
 }
 
+// <----------------------------------------------------------------> //
+/**
+ * @brief Lists the contacts of the user.
+ *
+ * @param sock The socket file descriptor for the client-server connection.
+ * @param userId The ID of the user.
+ */
+// <----------------------------------------------------------------> //
 void listContacts(int sock, int userId)
 {
     Message msg;
@@ -144,16 +185,19 @@ void listContacts(int sock, int userId)
     }
 }
 
+// <----------------------------------------------------------------> //
+/**
+ * @brief Creates a new user.
+ *
+ * @return The new user.
+ */
+// <----------------------------------------------------------------> //
 User CreateUser()
 {
     User newUser;
     printf("Enter user ID: ");
     scanf("%d", &newUser.userId);
     getchar(); // To consume the newline character after the number
-
-    // printf("Enter username: ");
-    // fgets(newUser.username, sizeof(newUser.username), stdin);
-    // newUser.username[strcspn(newUser.username, "\n")] = 0; // Remove the newline character
 
     printf("Enter phone number: ");
     fgets(newUser.phoneNumber, sizeof(newUser.phoneNumber), stdin);
@@ -169,6 +213,15 @@ User CreateUser()
     return newUser;
 }
 
+// <----------------------------------------------------------------> //
+/**
+ * @brief Adds a user to the user list.
+ *
+ * @param sock The socket file descriptor for the client-server connection.
+ * @param userId The ID of the user.
+ * @param user The user to be added.
+ */
+// <----------------------------------------------------------------> //
 void addUser(int sock, int userId, User user)
 {
     Message msg;
@@ -182,7 +235,15 @@ void addUser(int sock, int userId, User user)
     }
 }
 
-// list contacts
+// <----------------------------------------------------------------> //
+/**
+ * @brief Processes the list of users received from the server.
+ *
+ * @param receivedMessage The message received from the server.
+ * @param sock The socket file descriptor for the client-server connection.
+ * @param userId The ID of the user.
+ */
+// <----------------------------------------------------------------> //
 void processUserList(Message receivedMessage, int sock, int userId)
 {
     User *users = malloc(MAX_USERS * sizeof(User));
@@ -192,8 +253,7 @@ void processUserList(Message receivedMessage, int sock, int userId)
         return;
     }
 
-    int userCount = receivedMessage.to; // sizeof(receivedMessage.body) / sizeof(User);
-    // memcpy(users, &receivedMessage.body, sizeof(receivedMessage.body)); // Copy the user structs from the message body
+    int userCount = receivedMessage.to;
     memcpy(users, &receivedMessage.body, userCount * sizeof(User));
     printf("User ID, Name, Surname, Phone Number\n");
     int i;
@@ -205,6 +265,14 @@ void processUserList(Message receivedMessage, int sock, int userId)
     free(users);
 }
 
+// <----------------------------------------------------------------> //
+/**
+ * @brief Deletes a user from the user list.
+ *
+ * @param sock The socket file descriptor for the client-server connection.
+ * @param userId The ID of the user.
+ */
+// <----------------------------------------------------------------> //
 void deleteUser(int sock, int userId)
 {
     int deleteUserId;
@@ -222,6 +290,14 @@ void deleteUser(int sock, int userId)
     }
 }
 
+// <----------------------------------------------------------------> //
+/**
+ * @brief Sends a message to another user.
+ *
+ * @param sock The socket file descriptor for the client-server connection.
+ * @param userId The ID of the user.
+ */
+// <----------------------------------------------------------------> //
 void sendMessage(int sock, int userId)
 {
     int recipientUserId;
@@ -253,6 +329,14 @@ void sendMessage(int sock, int userId)
     }
 }
 
+// <----------------------------------------------------------------> //
+/**
+ * @brief Checks if the user has any new messages.
+ *
+ * @param sock The socket file descriptor for the client-server connection.
+ * @param userId The ID of the user.
+ */
+// <----------------------------------------------------------------> //
 void checkMessage(int sock, int userId)
 {
     Message msg;
@@ -265,6 +349,14 @@ void checkMessage(int sock, int userId)
     }
 }
 
+// <----------------------------------------------------------------> //
+/**
+ * @brief Requests the server to send the messages from a specific user.
+ *
+ * @param sock The socket file descriptor for the client-server connection.
+ * @param userId The ID of the user.
+ */
+// <----------------------------------------------------------------> //
 void requestReadMessages(int sock, int userId)
 {
     int targetUserId;
@@ -283,6 +375,14 @@ void requestReadMessages(int sock, int userId)
     }
 }
 
+// <----------------------------------------------------------------> //
+/**
+ * @brief Checks if the user has any new messages.
+ *
+ * @param sock The socket file descriptor for the client-server connection.
+ * @param userId The ID of the user.
+ */
+// <----------------------------------------------------------------> //
 void *checkMessageType(void *arg)
 {
     int sock = ((struct args *)arg)->sock;
@@ -300,6 +400,14 @@ void *checkMessageType(void *arg)
     return NULL;
 }
 
+// <----------------------------------------------------------------> //
+/**
+ * @brief Handles the menu for the user.
+ *
+ * @param sock The socket file descriptor for the client-server connection.
+ * @param userId The ID of the user.
+ */
+// <----------------------------------------------------------------> //
 void HandleMenu(int sock, int userId)
 {
     printf("<--------------------------->\n");
@@ -347,6 +455,13 @@ void HandleMenu(int sock, int userId)
     return;
 }
 
+// <----------------------------------------------------------------> //
+/**
+ * @brief Handles the user input.
+ *
+ * @param arg The arguments passed to the thread.
+ */
+// <----------------------------------------------------------------> //
 void *handleUserInput(void *arg)
 {
     int sock = ((struct args *)arg)->sock;
@@ -408,6 +523,7 @@ int main(int argc, char *argv[])
     send(sock, &loginMessage, sizeof(loginMessage), 0);
     printf("Login request sent to server\n");
 
+    // Create a new thread to handle user input
     pthread_t thread_id;
     struct args arguments = {sock, userId, showMenu};
     pthread_create(&thread_id, NULL, handleUserInput, &arguments);
@@ -417,7 +533,6 @@ int main(int argc, char *argv[])
 
         // Receive message from server
         Message receivedMessage;
-        // int valrec = recv(sock, &receivedMessage, BUFFER_SIZE, 0);
         int valrec = recv(sock, &receivedMessage, sizeof(Message), 0);
         if (valrec <= 0 || receivedMessage.type == -1) // disconnect request or connection closed
         {
@@ -429,7 +544,7 @@ int main(int argc, char *argv[])
         {
             registerUser(sock, userId);
         }
-        else if (receivedMessage.type == 3)
+        else if (receivedMessage.type == 3) // confirmation message
         {
             // confirmation message
             printf("<!!!!!!!!!!!!!!!!!!!!!!!!!!!>\n");
@@ -438,25 +553,25 @@ int main(int argc, char *argv[])
             // HandleMenu(sock, userId);
             showMenu = 1;
         }
-        else if (receivedMessage.type == 4)
+        else if (receivedMessage.type == 4) // list contacts
         {
             // list contacts
             processUserList(receivedMessage, sock, userId);
             showMenu = 1;
             // HandleMenu(sock, userId);
         }
-        else if (receivedMessage.type == 7)
+        else if (receivedMessage.type == 7) // send message
         {
             printf("Message received from %d: %s\n", receivedMessage.from, receivedMessage.body);
             showMenu = 1;
             // HandleMenu(sock, userId);
         }
-        else if (receivedMessage.type == 8)
+        else if (receivedMessage.type == 8) // check message
         {
             printf("%s", receivedMessage.body);
             requestReadMessages(sock, userId);
         }
-        else if (receivedMessage.type == 9)
+        else if (receivedMessage.type == 9) // read messages
         {
             printf("Messages from %d:\n", receivedMessage.from);
             printf("%s", receivedMessage.body);

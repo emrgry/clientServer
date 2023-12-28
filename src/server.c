@@ -49,13 +49,11 @@ typedef struct
     char surname[REGISTRATION_BUFFER_SIZE];
 } User;
 
-typedef struct
-{
-    int userId;
-    int count;
-    struct Node *next;
-} Node;
-
+// <----------------------------------------------------------------> //
+/**
+ * @brief Notifies all connected clients about the server shutdown and closes their connections.
+ */
+// <----------------------------------------------------------------> //
 void notifyClientsAndShutdown()
 {
     Message disconnectMessage;
@@ -69,6 +67,14 @@ void notifyClientsAndShutdown()
     close(0);
 }
 
+// <----------------------------------------------------------------> //
+/**
+ * @brief Sends a confirmation message to the client.
+ *
+ * @param newSocket The socket to send the message to.
+ * @param message The message to send.
+ */
+// <----------------------------------------------------------------> //
 void sendConfirmationMessage(int newSocket, const char *message)
 {
     Message confirmationMessage;
@@ -76,6 +82,16 @@ void sendConfirmationMessage(int newSocket, const char *message)
     strcpy(confirmationMessage.body, message);
     send(newSocket, &confirmationMessage, sizeof(confirmationMessage), 0);
 }
+
+// <----------------------------------------------------------------> //
+/**
+ * @brief Finds the socket associated with the given user ID.
+ *
+ * @param userId The user ID to search for.
+ * @param clients The array of sockets to search in.
+ * @return int The socket associated with the given user ID.
+ */
+// <----------------------------------------------------------------> //
 
 int findSocketByUserId(int userId, int *clients)
 {
@@ -90,15 +106,28 @@ int findSocketByUserId(int userId, int *clients)
     return clients[userId];
 }
 
+// <----------------------------------------------------------------> //
+/**
+ * @brief Disconnects a client from the server.
+ * @param newSocket The socket descriptor of the client to be disconnected.
+ * @param userId The unique identifier of the client to be disconnected.
+ */
+// <----------------------------------------------------------------> //
 void disconnectClient(int newSocket, int userId)
 {
-    // int userId = userMap[newSocket];
     printf("Client %d with userId %d  disconnected\n", newSocket, userId);
     close(newSocket);
-    // userMap[newSocket] = -1; // Remove the user from the map
     pthread_exit(NULL);
 }
 
+// <----------------------------------------------------------------> //
+/**
+ * @brief Checks if a user is registered in the "TerChatApp/users/user_list.txt" file.
+ *
+ * @param userId The user ID to check.
+ * @return int 1 if the user is registered, 0 otherwise.
+ */
+// <----------------------------------------------------------------> //
 int isUserRegistered(int userId)
 {
     FILE *file = fopen("TerChatApp/users/user_list.txt", "r");
@@ -123,6 +152,15 @@ int isUserRegistered(int userId)
     return 0; // User is not registered
 }
 
+// <----------------------------------------------------------------> //
+/**
+ * @brief Handles a login request from a client.
+ *
+ * @param newSocket The socket descriptor of the client.
+ * @param receivedMessage The message received from the client.
+ * @param clients The array of sockets.
+ */
+// <----------------------------------------------------------------> //
 void handleLoginRequest(int newSocket, Message receivedMessage, int *clients)
 {
     printf("Login request received from client: %d userId: %d\n", newSocket, receivedMessage.from);
@@ -130,8 +168,6 @@ void handleLoginRequest(int newSocket, Message receivedMessage, int *clients)
     if (isUserRegistered(receivedMessage.from))
     {
         printf("User is registered\n");
-        // Continue with login process
-        // userMap[newSocket] = receivedMessage.from;
         sendConfirmationMessage(newSocket, "logged in");
     }
     else
@@ -144,6 +180,14 @@ void handleLoginRequest(int newSocket, Message receivedMessage, int *clients)
     }
 }
 
+// <----------------------------------------------------------------> //
+/**
+ * @brief Handles a registration request from a client.
+ *
+ * @param newSocket The socket descriptor of the client.
+ * @param receivedMessage The message received from the client.
+ */
+// <----------------------------------------------------------------> //
 void handleRegistrationRequest(int newSocket, Message receivedMessage)
 {
     printf("Registration request received from client: %d userId: %d\n", newSocket, receivedMessage.from);
@@ -215,11 +259,20 @@ void handleRegistrationRequest(int newSocket, Message receivedMessage)
     sendConfirmationMessage(newSocket, "registered");
 }
 
+// <----------------------------------------------------------------> //
+/**
+ * @brief Sends the contact list of a user to the client.
+ *
+ * @param sock The socket descriptor of the client.
+ * @param userId The user ID of the user whose contact list is to be sent.
+ */
+// <----------------------------------------------------------------> //
 void sendContactList(int sock, int userId)
 {
     User users[MAX_USERS];
     int userCount = 0;
 
+    // Open the contact list file
     char filePath[100];
     sprintf(filePath, "TerChatApp/users/%d/contact_list.txt", userId);
     FILE *file = fopen(filePath, "r");
@@ -265,6 +318,15 @@ void sendContactList(int sock, int userId)
     }
 }
 
+// <----------------------------------------------------------------> //
+/**
+ * @brief Adds a user to the contact list of another user.
+ *
+ * @param sock The socket descriptor of the client.
+ * @param userId The user ID of the user whose contact list is to be modified.
+ * @param user The user to be added to the contact list.
+ */
+// <----------------------------------------------------------------> //
 void addUserToContactList(int sock, int userId, User user)
 {
     char filePath[100];
@@ -306,6 +368,15 @@ void addUserToContactList(int sock, int userId, User user)
     sendConfirmationMessage(sock, "User added to contact list");
 }
 
+// <----------------------------------------------------------------> //
+/**
+ * @brief Deletes a user from the contact list of another user.
+ *
+ * @param sock The socket descriptor of the client.
+ * @param userId The user ID of the user whose contact list is to be modified.
+ * @param userIdToDelete The user ID of the user to be deleted from the contact list.
+ */
+// <----------------------------------------------------------------> //
 void deleteUserFromFile(int sock, int userId, int userIdToDelete)
 {
     FILE *file;
@@ -369,6 +440,17 @@ void deleteUserFromFile(int sock, int userId, int userIdToDelete)
     sendConfirmationMessage(sock, "User deleted from contact list");
 }
 
+// <----------------------------------------------------------------> //
+/**
+ * @brief Processes a message received from a client.
+ *
+ * @param sock The socket descriptor of the client.
+ * @param fromUserId The user ID of the sender.
+ * @param toUserId The user ID of the recipient.
+ * @param recipientSocket The socket descriptor of the recipient.
+ * @param messageText The message text.
+ */
+// <----------------------------------------------------------------> //
 void processMessage(int sock, int fromUserId, int toUserId, int recipientSocket, char *messageText)
 {
     // Find the socket associated with the recipient user ID
@@ -431,6 +513,14 @@ void processMessage(int sock, int fromUserId, int toUserId, int recipientSocket,
     sendConfirmationMessage(sock, "Message sent");
 }
 
+// <----------------------------------------------------------------> //
+/**
+ * @brief Counts the unread messages for a user and sends the counts to the client.
+ *
+ * @param sock The socket descriptor of the client.
+ * @param userId The user ID of the user whose unread messages are to be counted.
+ */
+// <----------------------------------------------------------------> //
 void countUnreadMessagesAndSend(int sock, int userId)
 {
     printf("Counting unread messages for user %d\n", userId);
@@ -499,6 +589,15 @@ void countUnreadMessagesAndSend(int sock, int userId)
     }
 }
 
+// <----------------------------------------------------------------> //
+/**
+ * @brief Reads the messages of a user and sets the read status to read.
+ *
+ * @param sock The socket descriptor of the client.
+ * @param userId The user ID of the user whose messages are to be read.
+ * @param targetUserId The user ID of the user whose messages are to be read.
+ */
+// <----------------------------------------------------------------> //
 void readUserMessagesAndSetReadStatus(int sock, int userId, int targetUserId)
 {
     char filename[50];
@@ -596,6 +695,13 @@ void readUserMessagesAndSetReadStatus(int sock, int userId, int targetUserId)
     sendConfirmationMessage(sock, "Messages read");
 }
 
+// <----------------------------------------------------------------> //
+/**
+ * @brief Handles a client connection.
+ *
+ * @param args The arguments passed to the thread.
+ */
+// <----------------------------------------------------------------> //
 void *handleClient(void *args)
 {
     ThreadArgs *threadArgs = (ThreadArgs *)args;
@@ -620,38 +726,38 @@ void *handleClient(void *args)
             handleLoginRequest(newSocket, receivedMessage, clients);
         }
 
-        else if (receivedMessage.type == 1)
+        else if (receivedMessage.type == 1) // server message
         {
             printf("Message from client %d: %s\n", newSocket, receivedMessage.body);
         }
-        else if (receivedMessage.type == 2)
+        else if (receivedMessage.type == 2) // registration request
         {
             handleRegistrationRequest(newSocket, receivedMessage);
         }
-        else if (receivedMessage.type == 4)
+        else if (receivedMessage.type == 4) // list contacts
         {
             sendContactList(newSocket, receivedMessage.from);
         }
-        else if (receivedMessage.type == 5)
+        else if (receivedMessage.type == 5) // add user
         {
             User userToAdd;
             memcpy(&userToAdd, receivedMessage.body, sizeof(User));
             addUserToContactList(newSocket, receivedMessage.from, userToAdd);
         }
-        else if (receivedMessage.type == 6)
+        else if (receivedMessage.type == 6) // delete user
         {
             deleteUserFromFile(newSocket, receivedMessage.from, receivedMessage.to);
         }
-        else if (receivedMessage.type == 7)
+        else if (receivedMessage.type == 7) // send message
         {
             int recipientSocket = findSocketByUserId(receivedMessage.to, clients);
             processMessage(newSocket, receivedMessage.from, receivedMessage.to, recipientSocket, receivedMessage.body);
         }
-        else if (receivedMessage.type == 8)
+        else if (receivedMessage.type == 8) // check message
         {
             countUnreadMessagesAndSend(newSocket, receivedMessage.from);
         }
-        else if (receivedMessage.type == 9)
+        else if (receivedMessage.type == 9) // read messages
         {
             readUserMessagesAndSetReadStatus(newSocket, receivedMessage.from, receivedMessage.to);
         }
