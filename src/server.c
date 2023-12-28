@@ -493,7 +493,7 @@ void countUnreadMessagesAndSend(int sock, int userId)
     }
 }
 
-void readUserMessagesAndSetReadStatus(int sock, int userId)
+void readUserMessagesAndSetReadStatus(int sock, int userId, int targetUserId)
 {
     char filename[50];
     sprintf(filename, "TerChatApp/users/%d/messages.txt", userId);
@@ -524,7 +524,10 @@ void readUserMessagesAndSetReadStatus(int sock, int userId)
 
             // Parse the line
             sscanf(line, "%[^,], %d, %[^,], %d\n", date, &fromUserId, messageText, &readStatus);
-
+            if (fromUserId != targetUserId)
+            {
+                continue;
+            }
             // Reallocate memory for the messages
             messages = realloc(messages, (messageCount + 1) * sizeof(MessageData));
             if (messages == NULL)
@@ -637,7 +640,7 @@ void *handleClient(void *args)
         }
         else if (receivedMessage.type == 9)
         {
-            readUserMessagesAndSetReadStatus(newSocket, receivedMessage.from);
+            readUserMessagesAndSetReadStatus(newSocket, receivedMessage.from, receivedMessage.to);
         }
         else
         {
