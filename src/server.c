@@ -524,10 +524,7 @@ void readUserMessagesAndSetReadStatus(int sock, int userId, int targetUserId)
 
             // Parse the line
             sscanf(line, "%[^,], %d, %[^,], %d\n", date, &fromUserId, messageText, &readStatus);
-            if (fromUserId != targetUserId)
-            {
-                continue;
-            }
+            int setRead = 0;
             // Reallocate memory for the messages
             messages = realloc(messages, (messageCount + 1) * sizeof(MessageData));
             if (messages == NULL)
@@ -535,12 +532,16 @@ void readUserMessagesAndSetReadStatus(int sock, int userId, int targetUserId)
                 perror("Error reallocating memory for messages");
                 return;
             }
+            if (fromUserId == targetUserId)
+            {
+                setRead = 1;
+            }
 
             // Store the message
             messages[messageCount].date = strdup(date);
             messages[messageCount].fromUserId = fromUserId;
             messages[messageCount].messageText = strdup(messageText);
-            messages[messageCount].readStatus = 1; // Set the status to read
+            messages[messageCount].readStatus = setRead; // Set the status to read
             messageCount++;
         }
         fclose(file);
@@ -550,18 +551,24 @@ void readUserMessagesAndSetReadStatus(int sock, int userId, int targetUserId)
         if (file != NULL)
         {
             // Send the messages to the client
-            for (int i = 0; i < messageCount; i++)
+            int i;
+            for (i = 0; i < messageCount; i++)
             {
                 Message msg;
                 msg.type = 9; // type 9 for read message
                 sprintf(msg.body, "%s, %d, %s, %d\n", messages[i].date, messages[i].fromUserId, messages[i].messageText, messages[i].readStatus);
                 msg.to = userId;                   // to server
                 msg.from = messages[i].fromUserId; // from server
-
-                if (send(sock, &msg, sizeof(msg), 0) == -1)
+                if (messages[i].fromUserId == targetUserId)
                 {
-                    perror("Error sending message");
+                    if (send(sock, &msg, sizeof(msg), 0) == -1)
+                    {
+                        perror("Error sending message");
+                    }
                 }
+
+                // Write the updated message back to the file
+                fprintf(file, "%s, %d, %s, %d\n", messages[i].date, messages[i].fromUserId, messages[i].messageText, messages[i].readStatus);
 
                 free(messages[i].date);
                 free(messages[i].messageText);
