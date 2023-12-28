@@ -21,11 +21,17 @@ typedef struct // Struct to represent a message
 {
     /*
     message type / explanation
-        -1      /  disconnect
-        0       /  login request
-        1       /  regular message
-        2       /  registration request
-        3       /  confirmation message
+        -1       /  disconnect
+        0        /  login request
+        1        /  server message
+        2        /  registration request
+        3        /  confirmation message
+        4        /  list contacts
+        5        /  add user
+        6        /  delete user
+        7        /  send message
+        8        /  check message
+        9        /  read messages
     */
     int type;
     char body[1024];
@@ -662,6 +668,7 @@ void *handleClient(void *args)
 
 int main()
 {
+    printf("Server started\n");
     mkdir("TerChatApp", 0777);       // Create the TerChatApp directory if it does not exist
     mkdir("TerChatApp/users", 0777); // Create the users directory if it does not exist
 

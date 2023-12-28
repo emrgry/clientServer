@@ -42,6 +42,14 @@ typedef struct
     char surname[REGISTRATION_BUFFER_SIZE];
 } User;
 
+// struct to pass arguments to the new thread
+struct args
+{
+    int sock;
+    int userId;
+    int showMenu;
+};
+
 int validateUserId(char *userIdStr)
 {
     char *endChar;
@@ -274,6 +282,23 @@ void requestReadMessages(int sock, int userId)
     }
 }
 
+void *checkMessageType(void *arg)
+{
+    int sock = ((struct args *)arg)->sock;
+    int userId = ((struct args *)arg)->userId;
+
+    Message receivedMessage;
+    int valrec = recv(sock, &receivedMessage, sizeof(Message), 0);
+
+    if (receivedMessage.type == 9)
+    {
+        printf("Messages from %d:\n", receivedMessage.from);
+        printf("%s", receivedMessage.body);
+    }
+
+    return NULL;
+}
+
 void HandleMenu(int sock, int userId)
 {
     printf("<--------------------------->\n");
@@ -321,10 +346,28 @@ void HandleMenu(int sock, int userId)
     return;
 }
 
+void *handleUserInput(void *arg)
+{
+    int sock = ((struct args *)arg)->sock;
+    int userId = ((struct args *)arg)->userId;
+    int stopMenu = ((struct args *)arg)->showMenu;
+
+    while (1)
+    {
+        // if (stopMenu == 1)
+        // {
+        //     continue;
+        // }
+        HandleMenu(sock, userId);
+    }
+
+    return NULL;
+}
+
 int main(int argc, char *argv[])
 {
     int userId = validateUserId(argv[1]);
-
+    int showMenu = 0;
     int sock = 0;
     struct sockaddr_in serverAddr;
     char buffer[BUFFER_SIZE] = {0};
@@ -364,6 +407,10 @@ int main(int argc, char *argv[])
     send(sock, &loginMessage, sizeof(loginMessage), 0);
     printf("Login request sent to server\n");
 
+    pthread_t thread_id;
+    struct args arguments = {sock, userId, showMenu};
+    pthread_create(&thread_id, NULL, handleUserInput, &arguments);
+
     while (1)
     {
 
@@ -387,18 +434,21 @@ int main(int argc, char *argv[])
             printf("<!!!!!!!!!!!!!!!!!!!!!!!!!!!>\n");
             printf("Server notification! %s\n", receivedMessage.body);
             printf("<!!!!!!!!!!!!!!!!!!!!!!!!!!!>\n");
-            HandleMenu(sock, userId);
+            // HandleMenu(sock, userId);
+            showMenu = 1;
         }
         else if (receivedMessage.type == 4)
         {
             // list contacts
             processUserList(receivedMessage, sock, userId);
-            HandleMenu(sock, userId);
+            showMenu = 1;
+            // HandleMenu(sock, userId);
         }
         else if (receivedMessage.type == 7)
         {
             printf("Message received from %d: %s\n", receivedMessage.from, receivedMessage.body);
-            HandleMenu(sock, userId);
+            showMenu = 1;
+            // HandleMenu(sock, userId);
         }
         else if (receivedMessage.type == 8)
         {
@@ -409,6 +459,7 @@ int main(int argc, char *argv[])
         {
             printf("Messages from %d:\n", receivedMessage.from);
             printf("%s", receivedMessage.body);
+            showMenu = 1;
             // HandleMenu(sock, userId);
         }
         else
