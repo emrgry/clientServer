@@ -48,7 +48,7 @@ struct args
 {
     int sock;
     int userId;
-    int showMenu;
+    int *showMenu;
 };
 
 // <----------------------------------------------------------------> //
@@ -466,11 +466,11 @@ void *handleUserInput(void *arg)
 {
     int sock = ((struct args *)arg)->sock;
     int userId = ((struct args *)arg)->userId;
-    int stopMenu = ((struct args *)arg)->showMenu;
+    int *showMenu = ((struct args *)arg)->showMenu;
 
     while (1)
     {
-        if (stopMenu == 0)
+        if (*showMenu == 0)
         {
             continue;
         }
@@ -525,7 +525,7 @@ int main(int argc, char *argv[])
 
     // Create a new thread to handle user input
     pthread_t thread_id;
-    struct args arguments = {sock, userId, showMenu};
+    struct args arguments = {sock, userId, &showMenu};
     pthread_create(&thread_id, NULL, handleUserInput, &arguments);
 
     while (1)
