@@ -409,7 +409,7 @@ int main(int argc, char *argv[])
         {
             printf("Messages from %d:\n", receivedMessage.from);
             printf("%s", receivedMessage.body);
-            HandleMenu(sock, userId);
+            // HandleMenu(sock, userId);
         }
         else
         {

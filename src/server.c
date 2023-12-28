@@ -570,6 +570,7 @@ void readUserMessagesAndSetReadStatus(int sock, int userId)
     {
         perror("Error opening messages file");
     }
+    sendConfirmationMessage(sock, "Messages read");
 }
 
 void *handleClient(void *args)
