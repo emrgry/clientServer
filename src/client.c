@@ -450,7 +450,7 @@ void *handleUserInput(void *arg)
         {
             continue;
         }
-        HandleMenu(sock, userId, *showMenu);
+        HandleMenu(sock, userId, showMenu);
     }
 
     return NULL;
